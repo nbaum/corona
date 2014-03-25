@@ -19,7 +19,21 @@ module Corona
       self.config = config if config
     end
     
+    def dhcp_host_line
+      if config[:ip]
+        "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
+      end
+    end
+    
+    def configure_dhcp
+      config = Instance.all.map do |i|
+        i.dhcp_host_line
+      end.compact.join("\n")
+      File.write("var/dhcp-hosts", config + "\n")
+    end
+    
     def start
+      configure_dhcp
       super
       qmp("set_password", protocol: "vnc", password: config[:password])
       qmp("cont")

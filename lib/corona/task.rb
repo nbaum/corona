@@ -2,6 +2,7 @@
 require 'corona/errors'
 require 'corona/monkey'
 require 'corona/watcher'
+require 'corona/cached'
 
 require 'securerandom'
 require 'shellwords'
@@ -11,9 +12,16 @@ require 'extlib'
 module Corona
   
   class Task
+    include Cached
     
     def self.path (extra = "")
       File.expand_path(File.join("var", name.split("::")[-1].downcase.pluralize, extra))
+    end
+    
+    def self.all ()
+      Dir[path("*")].map { |path|
+        Instance[File.basename(path)]
+      }
     end
     
     def command
