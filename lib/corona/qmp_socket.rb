@@ -6,11 +6,10 @@ module Corona
   
   class QmpSocket < UNIXSocket
     
-    def initialize instance
-      super(instance.path("qmp"))
+    def initialize (path)
+      super(path)
       readline
       @id = 0
-      @instance = instance
       @tickets = {}
       Thread.new do
         begin
@@ -22,7 +21,7 @@ module Corona
             elsif e = v["error"]
               ticket.push [nil, e] if ticket
             else
-              instance.event(v) rescue nil
+              #instance.event(v) rescue nil
             end
           end
         end

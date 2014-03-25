@@ -40,6 +40,10 @@ module Corona
       qmp_socket.execute(command, arguments)
     end
     
+    def qga (command, arguments = {})
+      qga_socket.execute(command, arguments)
+    end
+    
     def config= (data)
       mkpath
       File.write(path("config.yml"), data.to_yaml)
@@ -88,7 +92,13 @@ module Corona
     end
     
     def qmp_socket ()
-      @socket ||= QmpSocket.new(self)
+      @socket ||= QmpSocket.new(path("qmp"))
+    rescue Errno::ECONNREFUSED, Errno::ENOENT
+      retry
+    end
+    
+    def qga_socket ()
+      @socket ||= QmpSocket.new(path("qga"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       retry
     end
@@ -101,7 +111,12 @@ module Corona
         "S" => true,
         "drive" => [],
         "vga" => "std",
-        "boot" => [menu: "on"]
+        "boot" => [menu: "on"],
+        "chardev" => [["socket", "server", "nowait", "nodelay", id: "qga0", path: path("qga")]],
+        "device" => [
+          ["virtio-serial"],
+          ["virtserialport", chardev: "qga0", name: "org.qemu.guest_agent.0"]
+        ]
       }
     end
     
