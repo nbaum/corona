@@ -19,21 +19,10 @@ module Corona
       self.config = config if config
     end
     
-    def dhcp_host_line
-      if config[:ip]
-        "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
-      end
-    end
-    
-    def configure_dhcp
-      config = Instance.all.map do |i|
-        i.dhcp_host_line
-      end.compact.join("\n")
-      File.write("var/dhcp-hosts", config + "\n")
-    end
-    
     def start
       configure_dhcp
+      volume = Volume.new("vm#{@id}/root")
+      volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
       qmp("set_password", protocol: "vnc", password: config[:password])
       qmp("cont")
@@ -83,6 +72,19 @@ module Corona
     
     private
     
+    def dhcp_host_line
+      if config[:ip]
+        "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
+      end
+    end
+    
+    def configure_dhcp
+      config = Instance.all.map do |i|
+        i.dhcp_host_line
+      end.compact.join("\n")
+      File.write("var/dhcp-hosts", config + "\n")
+    end
+    
     def qmp_socket ()
       @socket ||= QmpSocket.new(self)
     rescue Errno::ECONNREFUSED, Errno::ENOENT
@@ -91,12 +93,10 @@ module Corona
     
     def default_arguments
       {
-        "nodefaults" => true,
         "qmp" => [["unix:#{path("qmp")}", "server", "nowait", "nodelay"]],
-        "S" => true,
+        "nodefaults" => true,
         "enable-kvm" => true,
-        "usb" => true,
-        "vga" => "std",
+        "S" => true,
         "drive" => []
       }
     end
@@ -105,8 +105,6 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      volume = Volume.new("vm#{@id}/root")
-      volume.truncate(config[:storage] * 1000000000) if config[:storage]
       a["hda"] = volume.path
       a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
       a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
