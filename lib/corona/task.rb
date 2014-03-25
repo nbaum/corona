@@ -55,7 +55,7 @@ module Corona
     end
     
     def log
-      File.read(path("log"))
+      File.read(path("log")) rescue nil
     end
     
     private
