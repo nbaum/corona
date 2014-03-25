@@ -63,6 +63,7 @@ module Corona
           end
         end
       end
+      puts "EXECUTE: #{s.shelljoin}"
       s
     end
     
