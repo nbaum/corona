@@ -11,10 +11,12 @@ GEM
     extlib (0.9.16)
     ffi (1.9.3)
     i18n (0.6.9)
+    kgio (2.9.2)
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
     rack (1.5.2)
+    raindrops (0.13.0)
     rake (10.1.1)
     rb-inotify (0.9.3)
       ffi (>= 0.5.0)
@@ -25,6 +27,10 @@ GEM
     term-ansicolor (1.2.2)
       tins (~> 0.8)
     tins (0.13.1)
+    unicorn (4.8.2)
+      kgio (~> 2.6)
+      rack
+      raindrops (~> 0.7)
 
 PLATFORMS
   ruby
@@ -35,3 +41,4 @@ DEPENDENCIES
   extlib
   rack
   rb-inotify
+  unicorn
