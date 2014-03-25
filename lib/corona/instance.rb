@@ -28,7 +28,7 @@ module Corona
     end
     
     def qmp (command, arguments = {})
-      qmp_socket.execute(command, arguments = {})
+      qmp_socket.execute(command, arguments)
     end
     
     def config= (data)
