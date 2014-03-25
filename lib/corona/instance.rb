@@ -70,13 +70,15 @@ module Corona
       s
     end
     
-    private
+    protected
     
     def dhcp_host_line
       if config[:ip]
         "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
       end
     end
+    
+    private
     
     def configure_dhcp
       config = Instance.all.map do |i|
@@ -97,7 +99,9 @@ module Corona
         "nodefaults" => true,
         "enable-kvm" => true,
         "S" => true,
-        "drive" => []
+        "drive" => [],
+        "vga" => "std",
+        "boot" => [menu: "on"]
       }
     end
     
@@ -105,7 +109,7 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["hda"] = volume.path
+      a["hda"] = Volume.new("vm#{@id}/root").path
       a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
       a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
