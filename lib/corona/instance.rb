@@ -19,6 +19,12 @@ module Corona
       self.config = config if config
     end
     
+    def start
+      super
+      qmp("set_password", protocol: "vnc", password: config[:password])
+      qmp("cont")
+    end
+    
     def status
       if !running?
         :stopped
@@ -85,11 +91,11 @@ module Corona
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
       volume = Volume.new("vm#{@id}/root")
-      volume.truncate(config[:storage]) if !volume.exist? and config[:storage]
+      volume.truncate(config[:storage] * 1000000000) if config[:storage]
       a["hda"] = volume.path
       a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
-      a["vnc"] = ":#{config[:display]}"
-      p config
+      a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
+      a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
       a
     end
     
