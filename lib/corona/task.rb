@@ -13,7 +13,7 @@ module Corona
   class Task
     
     def self.path (extra = "")
-      File.join("var", name.split("::")[-1].downcase.pluralize, extra)
+      File.expand_path(File.join("var", name.split("::")[-1].downcase.pluralize, extra))
     end
     
     def command
