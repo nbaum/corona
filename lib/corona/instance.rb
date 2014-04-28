@@ -37,14 +37,6 @@ module Corona
       end
     end
     
-    def qmp (command, arguments = {})
-      qmp_socket.execute(command, arguments)
-    end
-    
-    def qga (command, arguments = {})
-      qga_socket.execute(command, arguments)
-    end
-    
     def config= (data)
       mkpath
       File.write(path("config.yml"), data.to_yaml)
@@ -92,6 +84,14 @@ module Corona
       end
     end
     
+    def qmp (command, arguments = {})
+      qmp_socket.execute(command, arguments)
+    rescue Errno::EPIPE
+      @socket = nil
+      sleep 0.1
+      retry
+    end
+    
     protected
     
     def dhcp_host_line
@@ -114,17 +114,9 @@ module Corona
     end
     
     def qmp_socket ()
-      p [object_id]
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
-      sleep 1.0
-      retry
-    end
-    
-    def qga_socket ()
-      @socket ||= QmpSocket.new(path("qga"))
-    rescue Errno::ECONNREFUSED, Errno::ENOENT
-      sleep 1.0
+      sleep 0.1
       retry
     end
     
@@ -137,11 +129,6 @@ module Corona
         "drive" => [],
         "vga" => "std",
         "boot" => [menu: "on"],
-        "chardev" => [["socket", "server", "nowait", "nodelay", id: "qga0", path: path("qga")]],
-        "device" => [
-          ["virtio-serial"],
-          ["virtserialport", chardev: "qga0", name: "org.qemu.guest_agent.0"]
-        ],
         "usb" => true,
         "usbdevice" => "tablet",
       }
