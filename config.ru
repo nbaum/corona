@@ -1,3 +1,6 @@
+#\ -w -o 127.0.0.1
+
+$: << "lib"
 
 require 'corona'
 

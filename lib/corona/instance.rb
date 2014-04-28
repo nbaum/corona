@@ -21,7 +21,7 @@ module Corona
     
     def start
       configure_dhcp
-      volume = Volume.new("vm#{@id}/root")
+      volume = root_volume
       volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
       qmp("set_password", protocol: "vnc", password: config[:password])
@@ -51,7 +51,7 @@ module Corona
     end
     
     def config ()
-      @config ||= YAML.load(File.read(path("config.yml")))
+      @config ||= (YAML.load(File.read(path("config.yml"))) rescue {})
     end
     
     def command ()
@@ -74,12 +74,33 @@ module Corona
       s
     end
     
+    def clone (from)
+      mkpath
+      if from.running?
+        commands = [
+          "cat>#{path('state').shellescape}",
+          root_volume.clone_command(from.root_volume),
+          "false"
+        ]
+        from.qmp(:migrate, uri: "exec:" + commands.join(";"))
+        while (p from.qmp("query-migrate")["status"]) == "active"
+          sleep 0.01
+        end
+      else
+        root_volume.clone(from.root_volume)
+      end
+    end
+    
     protected
     
     def dhcp_host_line
       if config[:ip]
         "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
       end
+    end
+    
+    def root_volume
+      Volume.new("vm#{@id}/root")
     end
     
     private
@@ -94,12 +115,14 @@ module Corona
     def qmp_socket ()
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
+      sleep 1.0
       retry
     end
     
     def qga_socket ()
       @socket ||= QmpSocket.new(path("qga"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
+      sleep 1.0
       retry
     end
     
@@ -124,7 +147,7 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["hda"] = Volume.new("vm#{@id}/root").path
+      a["hda"] = root_volume.path
       a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
       a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]

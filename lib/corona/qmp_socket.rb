@@ -14,7 +14,9 @@ module Corona
       Thread.new do
         begin
           while true
-            v = JSON.parse readline
+            line = readline
+            v = JSON.parse line
+            ::Kernel.puts "< #{line}"
             ticket = @tickets[v["id"]] if v["id"]
             if r = v["return"]
               ticket.push [r, nil] if ticket
@@ -31,9 +33,15 @@ module Corona
     
     def execute (command, args = {})
       @tickets[@id += 1] = q = Queue.new
-      puts({"execute" => command, "arguments" => args, "id" => @id}.to_json)
+      message = {"execute" => command, "arguments" => args, "id" => @id}.to_json
+      ::Kernel.puts "> #{message}"
+      puts message
       r, e = q.pop
-      r || raise(Error, "#{e["class"]}: #{e["desc"]}: #{e["data"]}")
+      if e
+        raise(Error, "#{e["class"]}: #{e["desc"]}: #{e["data"]}")
+      else
+        r
+      end 
     end
     
   end

@@ -50,6 +50,13 @@ module Corona
       File.truncate(path, size)
     end
     
+    def clone_command (source)
+      [
+        ["mkdir", "-p", File.dirname(path)],
+        ["cp", "--reflink=always", source.path, path],
+      ].map(&:shelljoin).join(";")
+    end
+    
     def clone (source)
       make_path
       system("cp", "--reflink=always", source.path, path)

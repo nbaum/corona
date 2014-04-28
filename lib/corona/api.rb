@@ -11,6 +11,10 @@ module Corona
       dispatch
     end
     
+    def do_iso_list ()
+      Volume.list("isoimages").map{|v|File.basename(v.path)}
+    end
+    
     def do_log ()
       instance.log
     end
@@ -32,10 +36,14 @@ module Corona
       instance.status
     end
     
+    def do_clone ()
+      instance(:new_instance).clone(instance)
+    end
+    
     private
     
-    def instance
-      Instance[params[:instance]]
+    def instance (param = :instance)
+      Instance[params[param]]
     end
     
     def dispatch ()
@@ -44,7 +52,7 @@ module Corona
       res = __send__("do_" + name)
       @response.write res.to_yaml
       @response.finish
-    rescue => e
+    rescue Exception => e
       @response.write [e.message, e.backtrace].to_yaml
       @response.status = 500
       @response.finish
