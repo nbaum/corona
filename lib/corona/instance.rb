@@ -139,7 +139,9 @@ module Corona
         "device" => [
           ["virtio-serial"],
           ["virtserialport", chardev: "qga0", name: "org.qemu.guest_agent.0"]
-        ]
+        ],
+        "usb" => true,
+        "usbdevice" => "tablet",
       }
     end
     
