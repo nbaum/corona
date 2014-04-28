@@ -7,6 +7,7 @@ require 'yaml'
 module Corona
   
   class Instance < Task
+    include Cached
     
     attr_reader :config
     
@@ -113,6 +114,7 @@ module Corona
     end
     
     def qmp_socket ()
+      p [object_id]
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 1.0

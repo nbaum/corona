@@ -5,11 +5,11 @@ module Corona
     
     module ClassMethods
       
-      def self.cache
+      def cache
         @cache ||= {}
       end
       
-      def self.new (*args)
+      def new (*args)
         cache[args] ||= super(*args)
       end
       

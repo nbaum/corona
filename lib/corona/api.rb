@@ -40,6 +40,10 @@ module Corona
       instance(:new_instance).clone(instance)
     end
     
+    def do_reset
+      instance.qmp(:system_reset)
+    end
+    
     private
     
     def instance (param = :instance)
