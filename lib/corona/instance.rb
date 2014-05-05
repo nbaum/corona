@@ -110,7 +110,7 @@ module Corona
       FileUtils.rm_rf(path("floppy"))
       FileUtils.mkpath(path("floppy"))
       config[:guest_data].each do |key, value|
-        File.write(path("floppy", key), value)
+        File.write(path("floppy", key), "#{value}\n")
       end
     end
     
