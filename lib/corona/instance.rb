@@ -21,7 +21,7 @@ module Corona
     end
     
     def start
-      configure_floppy
+      configure_guest_config
       volume = root_volume
       volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
@@ -106,7 +106,7 @@ module Corona
     
     private
     
-    def configure_floppy
+    def configure_guest_config
       FileUtils.rm_rf(path("floppy"))
       FileUtils.mkpath(path("floppy"))
       config[:guest_data].each do |key, value|
@@ -133,7 +133,7 @@ module Corona
         "usb" => true,
         "usbdevice" => "tablet",
         "boot" => "order=cdn",
-        "fda" => "fat:floppy:#{path("floppy")}",
+        "drive" => [file: "fat:#{path("floppy")}", if: "virtio", serial: "config", readonly: "on"],
       }
     end
     
