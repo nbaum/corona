@@ -21,11 +21,11 @@ module Corona
     end
     
     def start
-      configure_dhcp
+      configure_floppy
       volume = root_volume
       volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
-      qmp("set_password", protocol: "vnc", password: config[:password])
+      #qmp("set_password", protocol: "vnc", password: config[:password])
       qmp("cont")
     end
     
@@ -106,11 +106,12 @@ module Corona
     
     private
     
-    def configure_dhcp
-      config = Instance.all.map do |i|
-        i.dhcp_host_line
-      end.compact.join("\n")
-      File.write("var/dhcp-hosts", config + "\n")
+    def configure_floppy
+      FileUtils.rm_rf(path("floppy"))
+      FileUtils.mkpath(path("floppy"))
+      config[:guest_data].each do |key, value|
+        File.write(path("floppy", key), value)
+      end
     end
     
     def qmp_socket ()
@@ -131,6 +132,8 @@ module Corona
         "boot" => [menu: "on"],
         "usb" => true,
         "usbdevice" => "tablet",
+        "boot" => "order=cdn",
+        "fda" => "fat:floppy:#{path("floppy")}",
       }
     end
     
@@ -141,6 +144,7 @@ module Corona
       a["hda"] = root_volume.path
       a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
       a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
+      a["vnc"] = [[":#{config[:display]}"]]
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
       a
     end
