@@ -2,7 +2,7 @@
 class File
   
   # TODO: Make atomic
-  def write (path, data)
+  def self.write (path, data)
     File.open(path, "w") do |io|
       io.puts data
     end
