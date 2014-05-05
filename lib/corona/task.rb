@@ -54,8 +54,8 @@ module Corona
       pid && File.exist?("/proc/#{pid}")
     end
     
-    def path (extra = "")
-      self.class.path(File.join("#{@id}", extra))
+    def path (*extra)
+      self.class.path(File.join("#{@id}", *extra.map(&:to_s)))
     end
     
     def cleanup
