@@ -115,6 +115,7 @@ module Corona
     end
     
     def qmp_socket ()
+      raise NotRunning unless running?
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 0.1
@@ -129,11 +130,13 @@ module Corona
         "S" => true,
         "drive" => [],
         "vga" => "std",
-        "boot" => [menu: "on"],
         "usb" => true,
-        "usbdevice" => "tablet",
+        "device" => [
+          ["usb-kbd"],
+          ["usb-mouse"],
+        ],
         "boot" => "order=cdn",
-        "drive" => [file: "fat:#{path("floppy")}", if: "virtio", serial: "config", readonly: "on"],
+        "fda" => "fat:floppy:12:#{path("floppy")}",
       }
     end
     
@@ -141,10 +144,26 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["hda"] = root_volume.path
-      a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
       a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
+      a["vnc"] = [[":#{config[:display]}"]]
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
+      if config[:type] == "mac"
+        a["cpu"] = "core2duo"
+        a["machine"] = "q35"
+        a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
+        a["device"] << ["ide-drive", bus: "ide.2", drive: "hd"]
+        a["drive"] << [id: "hd", if: "none", file: root_volume.path]
+        if config[:iso]
+          a["device"] << ["ide-drive", bus: "ide.0", drive: "cd"]
+          a["drive"] << [id: "cd", if: "none", snapshot: "on", file: Volume.new(config[:iso]).path]
+        end
+        a["kernel"] = "./chameleon.bin"
+        a["append"] = "idlehalt=0"
+        a["smbios"] = [{type: 2}]
+      else
+        a["hda"] = root_volume.path
+        a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
+      end
       a
     end
     

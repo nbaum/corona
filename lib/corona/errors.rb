@@ -1,7 +1,7 @@
-
 module Corona
 
   Error = Class.new(Exception)
-    
-end
 
+  NotRunning = Class.new(Error)
+
+end
