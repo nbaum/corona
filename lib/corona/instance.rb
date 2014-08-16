@@ -1,4 +1,3 @@
-
 require 'corona/task'
 require 'corona/qmp_socket'
 
@@ -65,7 +64,6 @@ module Corona
           end
         end
       end
-      puts "EXECUTE: #{s.shelljoin}"
       s
     end
     

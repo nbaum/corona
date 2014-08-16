@@ -1,4 +1,3 @@
-
 require 'corona/errors'
 require 'corona/monkey'
 require 'corona/watcher'
@@ -44,7 +43,7 @@ module Corona
       raise Error, "Task already running" if running?
       spawn command
     end
-   
+    
     def stop
       raise Error, "Task not running" if !running?
       Process.kill :KILL, pid
@@ -93,4 +92,3 @@ module Corona
   end
   
 end
-
