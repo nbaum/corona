@@ -144,8 +144,7 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["vnc"] = [[":#{config[:display]}", "password", "websocket"]]
-      a["vnc"] = [[":#{config[:display]}"]]
+      a["vnc"] = [[":#{config[:display]}", "password"]]
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
