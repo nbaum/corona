@@ -25,7 +25,9 @@ module Corona
       volume = root_volume
       volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
-      qmp("set_password", protocol: "vnc", password: config[:password])
+      if !config[:password].empty?
+        qmp("set_password", protocol: "vnc", password: config[:password])
+      end
       qmp("cont")
     end
     
@@ -37,14 +39,14 @@ module Corona
       end
     end
     
+    def config ()
+      @config ||= (YAML.load(File.read(path("config.yml"))) rescue {})
+    end
+    
     def config= (data)
       mkpath
       File.write(path("config.yml"), data.to_yaml)
       @config = data
-    end
-    
-    def config ()
-      @config ||= (YAML.load(File.read(path("config.yml"))) rescue {})
     end
     
     def command ()
@@ -144,7 +146,11 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["vnc"] = [[":#{config[:display]}", "password"]]
+      if config[:password].empty?
+        a["vnc"] = [[":#{config[:display]}"]]
+      else
+        a["vnc"] = [[":#{config[:display]}", "password"]]
+      end
       a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
