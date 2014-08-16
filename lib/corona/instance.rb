@@ -151,7 +151,8 @@ module Corona
       else
         a["vnc"] = [[":#{config[:display]}", "password"]]
       end
-      a["net"] = [["bridge", br: "br0"], ["nic", macaddr: config[:mac]]]
+      a["netdev"] = [["bridge", id: "netdev0", br: "br0"]]
+      a["device"] << [["e1000-82545em", netdev: "netdev0"]]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
         a["machine"] = "q35"
@@ -190,4 +191,3 @@ module Corona
   end
   
 end
-
