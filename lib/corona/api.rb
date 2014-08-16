@@ -44,6 +44,10 @@ module Corona
       instance.qmp(:system_reset)
     end
     
+    def do_command
+      instance.command
+    end
+    
     private
     
     def instance (param = :instance)
@@ -57,6 +61,9 @@ module Corona
       @response.write res.to_yaml
       @response.finish
     rescue Exception => e
+      STDERR.puts e.message
+      STDERR.puts e.backtrace
+      STDERR.puts
       @response.write [e.message, e.backtrace].to_yaml
       @response.status = 500
       @response.finish
