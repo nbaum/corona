@@ -156,11 +156,11 @@ module Corona
         a["cpu"] = "core2duo"
         a["machine"] = "q35"
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
-        a["device"] << ["ide-drive", bus: "ide.2", drive: "hd"]
-        a["drive"] << [id: "hd", if: "none", file: root_volume.path]
+        a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
+        a["drive"] << [id: "drive0", if: "none", file: root_volume.path]
         if config[:iso]
-          a["device"] << ["ide-drive", bus: "ide.0", drive: "cd"]
-          a["drive"] << [id: "cd", if: "none", snapshot: "on", file: Volume.new(config[:iso]).path]
+          a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
+          a["drive"] << [id: "drive1", if: "none", snapshot: "on", file: Volume.new(config[:iso]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
