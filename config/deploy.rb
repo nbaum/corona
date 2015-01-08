@@ -1,10 +1,7 @@
-# config valid only for Capistrano 3.2
-lock '3.2.1'
-
 set :application, 'corona'
 set :repo_url, 'corona@84.45.122.187:repo'
 
-set :deploy_to, '/home/corona'
+set :deploy_to, '/home/agent'
 
 set :linked_dirs, %w{var}
 
@@ -15,7 +12,7 @@ namespace :deploy do
     on roles(:app), in: :sequence, wait: 2 do
       execute "tmux kill-session -t corona" rescue
       sleep 1
-      execute "tmux new-session -d -s corona /home/corona/run"
+      execute "tmux new-session -d -s corona /home/agent/current/run"
     end
   end
 end

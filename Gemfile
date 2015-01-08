@@ -1,8 +1,9 @@
 source 'https://rubygems.org'
 
 gem 'rb-inotify'
-gem 'capistrano', '~> 3.1'
-gem 'capistrano-bundler', '~> 1.1.2'
+gem 'capistrano', '~> 3.1.0'
+gem 'capistrano-rvm'
+gem 'capistrano-bundler'
 gem 'rack'
 gem 'extlib'
 gem 'unicorn'
