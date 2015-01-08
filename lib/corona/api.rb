@@ -19,16 +19,26 @@ module Corona
       instance.log
     end
     
+    def do_start ()
+      instance.config = params[:config]
+      instance.start
+      true
+    end
+    
+    def do_pause ()
+      instance.pause
+      true
+    end
+    
+    def do_unpause ()
+      instance.unpause
+      true
+    end
+    
     def do_stop ()
       i = instance
       i.stop
       sleep 0.1 while i.running?
-      true
-    end
-    
-    def do_start ()
-      instance.config = params[:config]
-      instance.start
       true
     end
     

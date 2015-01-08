@@ -84,6 +84,14 @@ module Corona
       end
     end
     
+    def pause ()
+      qmp("stop")
+    end
+    
+    def unpause ()
+      qmp("cont")
+    end
+    
     def qmp (command, arguments = {})
       qmp_socket.execute(command, arguments)
     rescue Errno::EPIPE
@@ -107,6 +115,7 @@ module Corona
     private
     
     def configure_guest_config
+      return unless config[:guest_data]
       FileUtils.rm_rf(path("floppy"))
       FileUtils.mkpath(path("floppy"))
       config[:guest_data].each do |key, value|
@@ -171,18 +180,18 @@ module Corona
       a
     end
     
-    def format_option (value)
-      case value
+    def format_option (option)
+      case option
       when Array
-        value.flat_map do |v|
+        option.flat_map do |v|
           format_option(v)
         end
       when Hash
-        value.flat_map do |k, v|
+        option.flat_map do |k, v|
           "#{k}=#{v}"
         end
       else
-        [value.to_s]
+        [option.to_s]
       end
     end
     
