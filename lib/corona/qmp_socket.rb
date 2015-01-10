@@ -1,3 +1,4 @@
+Thread.abort_on_exception = true
 
 require 'socket'
 require 'json'
@@ -15,9 +16,9 @@ module Corona
           v = JSON.parse(readline)
           if ticket = @tickets[v["id"]]
             if res = v["return"]
-              ticket.push true, res
+              ticket.push [true, res]
             elsif err = v["error"]
-              ticket.push false, err
+              ticket.push [false, err]
             end
           end
         end
