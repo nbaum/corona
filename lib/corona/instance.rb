@@ -158,7 +158,7 @@ module Corona
       else
         a["vnc"] = [[":#{config[:display]}", "password"]]
       end
-      a["netdev"] = [["bridge", id: "netdev0", br: "br0"]]
+      a["netdev"] = [["bridge", id: "netdev0", br: ENV["BRIDGE"]]]
       a["device"] << [["e1000-82545em", netdev: "netdev0"]]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
