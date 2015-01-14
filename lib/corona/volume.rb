@@ -34,13 +34,13 @@ module Corona
       v
     end
     
-    def initialize (name, pool)
+    def initialize (name, pool = nil)
       @pool = pool
       @name = name
     end
     
     def path
-      File.join(File.expand_path("var/storage"), @pool, @name)
+      File.join(File.expand_path("var/storage"), @pool || "", @name)
     end
     
     def exist? ()

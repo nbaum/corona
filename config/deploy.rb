@@ -13,7 +13,7 @@ namespace :deploy do
     on roles(:app), in: :sequence, wait: 2 do
       execute "tmux kill-session -t corona" rescue
       sleep 1
-      execute "tmux new-session -d -s corona /home/agent/current/run"
+      execute "tmux new-session -d -s corona \"exec bash -lc '/home/agent/current/run'\""
     end
   end
 end
