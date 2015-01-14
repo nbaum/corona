@@ -109,7 +109,7 @@ module Corona
     end
     
     def root_volume
-      Volume.new("vm#{@id}/root")
+      Volume.new("vm#{@id}/root", "standard")
     end
     
     private
