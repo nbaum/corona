@@ -6,34 +6,41 @@ module Corona
 
   class Volume
     
-    attr_accessor :path
+    attr_accessor :name, :pool
     
-    def self.root
-      File.expand_path("var/storage")
+    def self.root (*parts)
+      File.join(File.expand_path("var/storage"), *parts)
     end
     
-    def self.list (path = "")
-      Dir[File.join(root, path, "**/*")].select do |path|
-        File.file?(path)
-      end.map do |path|
-        new(path)
+    def self.list (pool)
+      Dir.chdir(root(pool)) do
+        Dir["**/*"].select do |name|
+          File.file?(name)
+        end.map do |name|
+          new(name, pool)
+        end
       end
     end
     
-    def self.create (path)
-      v = new(path)
+    def self.create (name, pool)
+      v = new(name, pool)
       raise Error, "#{path} already exists" if v.exist?
       v
     end
     
-    def self.open (path)
-      v = new(path)
+    def self.open (name, pool)
+      v = new(name, pool)
       raise Error, "#{path} doesn't exist" unless v.exist?
       v
     end
     
-    def initialize (path)
-      @path = File.expand_path(path, Volume.root)
+    def initialize (name, pool)
+      @pool = pool
+      @name = name
+    end
+    
+    def path
+      File.join(File.expand_path("var/storage"), @pool, @name)
     end
     
     def exist? ()
@@ -64,6 +71,14 @@ module Corona
     
     def remove ()
       FileUtils.rm_f path
+    end
+    
+    def stat ()
+      File.stat(path)
+    end
+    
+    def size ()
+      stat.size
     end
     
   end

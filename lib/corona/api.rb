@@ -11,8 +11,14 @@ module Corona
       dispatch
     end
     
-    def do_iso_list ()
-      Volume.list("isoimages").map{|v|File.basename(v.path)}
+    def do_list_volumes ()
+      Volume.list(params[:pool]).map do |v|
+        {
+          name: v.name,
+          pool: v.pool,
+          size: v.size
+        }
+      end
     end
     
     def do_log ()
@@ -29,12 +35,12 @@ module Corona
       instance.pause
       true
     end
-    
+
     def do_unpause ()
       instance.unpause
       true
     end
-    
+
     def do_stop ()
       i = instance
       i.stop
