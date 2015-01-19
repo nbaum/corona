@@ -141,8 +141,7 @@ module Corona
         "vga" => "std",
         "usb" => true,
         "device" => [
-          ["usb-kbd"],
-          ["usb-mouse"],
+          ["usb-tablet"],
         ],
         "boot" => "order=cdn",
         "fda" => "fat:floppy:12:#{path("floppy")}",
