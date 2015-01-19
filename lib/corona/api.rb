@@ -71,7 +71,11 @@ module Corona
     def do_delete ()
       Volume.new(params[:path], params[:pool]).remove
     end
-    
+  
+    def do_wipe
+      Volume.new(params[:path], params[:pool]).wipe
+    end
+  
     private
     
     def instance (param = :instance)

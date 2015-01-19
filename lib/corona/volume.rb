@@ -80,7 +80,13 @@ module Corona
     def size ()
       stat.size
     end
-    
+
+    def wipe ()
+      size = self.size
+      remove
+      truncate(size)
+    end
+
   end
   
 end
