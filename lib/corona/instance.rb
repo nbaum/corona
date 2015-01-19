@@ -24,6 +24,7 @@ module Corona
       #volume = root_volume
       #volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
+      File.write(path("command"), command.shelljoin)
       if !config[:password].empty?
         qmp("set_password", protocol: "vnc", password: config[:password])
       end
