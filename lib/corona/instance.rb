@@ -160,6 +160,7 @@ module Corona
       end
       a["netdev"] = [["bridge", id: "netdev0", br: ENV["BRIDGE"]]]
       a["device"] << [["e1000-82545em", netdev: "netdev0"]]
+      a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
         a["machine"] = "q35"
