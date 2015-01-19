@@ -140,10 +140,8 @@ module Corona
         "S" => true,
         "drive" => [],
         "vga" => "std",
+        "device" => [],
         "usb" => true,
-        "device" => [
-          ["usb-tablet"],
-        ],
         "boot" => "order=cdn",
         "fda" => "fat:floppy:12:#{path("floppy")}",
       }
@@ -179,6 +177,7 @@ module Corona
       else
         a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
         a["hda"] = Volume.new(config[:hd]).path if config[:hd]
+        a["device"] << ["usb-tablet"]
       end
       a
     end
