@@ -164,10 +164,12 @@ module Corona
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
         a["machine"] = "q35"
+        a["device"] << ["usb-kbd"]
+        a["device"] << ["usb-mouse"]
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
         a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
-        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:cd]).path]
-        if config[:iso]
+        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        if config[:cd]
           a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
           a["drive"] << [id: "drive1", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
         end
