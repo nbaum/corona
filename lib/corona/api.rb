@@ -64,6 +64,14 @@ module Corona
       instance.command
     end
     
+    def do_allocate ()
+      Volume.new(params[:path], params[:pool]).truncate(params[:size])
+    end
+    
+    def do_delete ()
+      Volume.new(params[:path], params[:pool]).remove
+    end
+    
     private
     
     def instance (param = :instance)

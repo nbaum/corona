@@ -21,8 +21,8 @@ module Corona
     
     def start
       configure_guest_config
-      volume = root_volume
-      volume.truncate(config[:storage] * 1000000000) if config[:storage]
+      #volume = root_volume
+      #volume.truncate(config[:storage] * 1000000000) if config[:storage]
       super
       if !config[:password].empty?
         qmp("set_password", protocol: "vnc", password: config[:password])
@@ -108,9 +108,9 @@ module Corona
       end
     end
     
-    def root_volume
-      Volume.new("vm#{@id}/root", "standard")
-    end
+    #def root_volume
+    #  Volume.new("vm#{@id}/root", "standard")
+    #end
     
     private
     
@@ -165,17 +165,17 @@ module Corona
         a["machine"] = "q35"
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
         a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
-        a["drive"] << [id: "drive0", if: "none", file: root_volume.path]
+        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:cd]).path]
         if config[:iso]
           a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", if: "none", snapshot: "on", file: Volume.new(config[:iso]).path]
+          a["drive"] << [id: "drive1", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       else
-        a["hda"] = root_volume.path
-        a["cdrom"] = Volume.new(config[:iso]).path if config[:iso]
+        a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
+        a["hda"] = Volume.new(config[:hd]).path if config[:hd]
       end
       a
     end
