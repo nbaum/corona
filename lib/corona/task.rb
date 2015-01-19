@@ -40,12 +40,12 @@ module Corona
     end
     
     def start
-      raise Error, "Task already running" if running?
+      return if running?
       spawn command
     end
     
     def stop
-      raise Error, "Task not running" if !running?
+      return if !running?
       Process.kill :KILL, pid
     end
     
