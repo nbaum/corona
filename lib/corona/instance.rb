@@ -138,8 +138,8 @@ module Corona
         "nodefaults" => true,
         "enable-kvm" => true,
         "S" => true,
-        "drive" => [],
         "vga" => "std",
+        "drive" => [],
         "device" => [],
         "usb" => true,
         "fda" => "fat:floppy:12:#{path("floppy")}",
@@ -150,7 +150,7 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
-      a["boot"] = [order: config[:boot_order] || "cdn"],
+      a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "250"]
       if config[:password].empty?
         a["vnc"] = [[":#{config[:display]}"]]
       else
