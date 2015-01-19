@@ -142,7 +142,6 @@ module Corona
         "vga" => "std",
         "device" => [],
         "usb" => true,
-        "boot" => "order=cdn",
         "fda" => "fat:floppy:12:#{path("floppy")}",
       }
     end
@@ -151,6 +150,7 @@ module Corona
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
+      a["boot"] = [order: config[:boot_order] || "cdn"],
       if config[:password].empty?
         a["vnc"] = [[":#{config[:display]}"]]
       else
