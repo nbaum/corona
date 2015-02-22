@@ -30,7 +30,7 @@ module Corona
       @tickets[@id += 1] = q = Queue.new
       puts({"execute" => command, "arguments" => args, "id" => @id}.to_json)
       won, value = q.pop
-      won ? value : raise(Error, "#{e["class"]}: #{e["desc"]}: #{e["data"]}")
+      won ? value : raise(Error, "#{value["class"]}: #{value["desc"]}: #{value["data"]}")
     end
 
   end
