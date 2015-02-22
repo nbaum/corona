@@ -10,10 +10,8 @@ set :keep_releases, 5
 
 namespace :deploy do
   task :restart do
-    on roles(:app), in: :sequence, wait: 2 do
-      execute "tmux kill-session -t corona" rescue
-      sleep 1
-      execute "tmux new-session -d -s corona \"exec bash -lc '/home/agent/current/run'\""
+    on roles(:sys), in: :sequence, wait: 2 do
+      execute "systemctl restart corona"
     end
   end
 end
