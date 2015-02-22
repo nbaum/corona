@@ -64,8 +64,13 @@ module Corona
       instance.command
     end
     
-    def do_allocate ()
-      Volume.new(params[:path], params[:pool]).truncate(params[:size])
+    def do_realize ()
+      if base = params[:base]
+        Volume.new(params[:path], params[:pool]).
+            clone(Volume.new(base[:path], base[:pool]))
+      else
+        Volume.new(params[:path], params[:pool]).truncate(params[:size])
+      end
     end
     
     def do_delete ()
