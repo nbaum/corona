@@ -169,14 +169,18 @@ module Corona
         a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
         if config[:cd]
           a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       else
-        a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
-        a["hda"] = Volume.new(config[:hd]).path if config[:hd]
+        a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
+        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        if config[:cd]
+          a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
+        end
         a["device"] << ["usb-tablet"]
       end
       a
