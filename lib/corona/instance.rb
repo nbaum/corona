@@ -152,9 +152,9 @@ module Corona
       a["smp"] = config[:cores]
       a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "1500"]
       if config[:password].empty?
-        a["vnc"] = [[":#{config[:display]}", websocket: config[:display] + 39000]]
+        a["vnc"] = [[":#{config[:display]}"]]
       else
-        a["vnc"] = [[":#{config[:display]}", "password", websocket: config[:display] + 39000]]
+        a["vnc"] = [[":#{config[:display]}", "password"]]
       end
       a["netdev"] = [["bridge", id: "netdev0", br: ENV["BRIDGE"]]]
       a["device"] << [["e1000-82545em", netdev: "netdev0"]]
