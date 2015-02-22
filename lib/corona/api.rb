@@ -94,10 +94,7 @@ module Corona
       @response.write res.to_yaml
       @response.finish
     rescue Exception => e
-      STDERR.puts e.message
-      STDERR.puts e.backtrace
-      STDERR.puts
-      @response.write [e.message, e.backtrace].to_yaml
+      @response.write [e.class.name, e.message, e.backtrace[0...(e.backtrace.length - caller.length)]].to_yaml
       @response.status = 500
       @response.finish
     end

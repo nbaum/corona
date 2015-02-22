@@ -125,7 +125,7 @@ module Corona
     end
     
     def qmp_socket ()
-      raise NotRunning unless running?
+      raise NotRunning, log unless running?
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 0.1
