@@ -39,7 +39,7 @@ module Corona
       nil
     end
     
-    def start
+    def start (command)
       return if running?
       spawn command
     end

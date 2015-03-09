@@ -54,6 +54,7 @@ module Corona
     
     def do_clone ()
       instance(:new_instance).clone(instance)
+      true
     end
     
     def do_reset
@@ -62,6 +63,17 @@ module Corona
     
     def do_command
       instance.command
+    end
+    
+    def do_suspend
+      instance.migrate_to(params[:tag])
+      true
+    end
+    
+    def do_resume
+      instance.config = params[:config]
+      instance.migrate_from(params[:tag])
+      true
     end
     
     def do_realize ()
@@ -93,7 +105,9 @@ module Corona
       res = __send__("do_" + name)
       @response.write res.to_yaml
       @response.finish
-    rescue Exception => e
+    rescue => e
+      puts e.message
+      puts e.backtrace
       @response.write [e.class.name, e.message, e.backtrace[0...(e.backtrace.length - caller.length)]].to_yaml
       @response.status = 500
       @response.finish

@@ -18,7 +18,7 @@ module Kernel
         begin
           Process.daemon(true, true)
           yield
-        rescue Exception => e
+        rescue => e
           pout.puts(Marshal.dump(e))
         end
       end

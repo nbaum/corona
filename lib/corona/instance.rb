@@ -19,12 +19,10 @@ module Corona
       self.config = config if config
     end
     
-    def start
+    def start (args = {})
       configure_guest_config
-      #volume = root_volume
-      #volume.truncate(config[:storage] * 1000000000) if config[:storage]
-      super
-      File.write(path("command"), command.shelljoin)
+      super(command(args))
+      File.write(path("command"), command(args).shelljoin)
       if !config[:password].empty?
         qmp("set_password", protocol: "vnc", password: config[:password])
       end
@@ -49,9 +47,9 @@ module Corona
       @config = data
     end
     
-    def command ()
+    def command (args = {})
       s = ["qemu-system-x86_64"]
-      arguments.each do |option, values|
+      arguments(args).each do |option, values|
         Array(values).each do |value|
           case value
           when nil, false
@@ -68,21 +66,39 @@ module Corona
       s
     end
     
-    def clone (from)
-      mkpath
-      if from.running?
-        commands = [
-          "cat>#{path('state').shellescape}",
-          root_volume.clone_command(from.root_volume),
-          "false"
-        ]
-        from.qmp(:migrate, uri: "exec:" + commands.join(";"))
-        while (p from.qmp("query-migrate")["status"]) == "active"
-          sleep 0.01
-        end
+    def state_path (*tag)
+      File.join("var", "state", *tag)
+    end
+    
+    def migrate_to (host_or_file, port = nil)
+      raise "I can't migrate a VM that isn't running" unless running?
+      uri = if port
+        "tcp:#{host_or_file}:#{port}"
       else
-        root_volume.clone(from.root_volume)
+        FileUtils.mkpath state_path
+        path = state_path(host_or_file)
+        "exec:cat>#{path.shellescape}"
       end
+      qmp(:migrate, uri: uri)
+      while ["setup", "active"].member?(p qmp("query-migrate")["status"])
+        sleep 0.1
+      end
+      raise "Migration failed: #{log}" if qmp("query-migrate")["status"] == "failed"
+    end
+    
+    def migrate_from (host_or_file, port = nil)
+      uri = if port
+        "tcp:#{host_or_file}:#{port}"
+      else
+        FileUtils.mkpath state_path
+        path = state_path(host_or_file)
+        "exec:cat<#{path.shellescape}"
+      end
+      start(incoming: uri)
+      while ["setup", "active"].member?(p qmp("query-migrate")["status"])
+        sleep 0.1
+      end
+      raise "Migration failed: #{log}" if qmp("query-migrate")["status"] == "failed"
     end
     
     def pause ()
@@ -108,10 +124,6 @@ module Corona
         "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
       end
     end
-    
-    #def root_volume
-    #  Volume.new("vm#{@id}/root", "standard")
-    #end
     
     private
     
@@ -142,11 +154,11 @@ module Corona
         "drive" => [],
         "device" => [],
         "usb" => true,
-        "fda" => "fat:floppy:12:#{path("floppy")}",
+        "fda" => "fat:floppy:12:#{path("floppy")}"
       }
     end
     
-    def arguments
+    def arguments (extra = {})
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
@@ -175,15 +187,18 @@ module Corona
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       else
-        a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
-        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
-        if config[:cd]
-          a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
-        end
+        #a["device"] << ["isa-ide"]
+        #a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
+        #a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        #if config[:cd]
+        #  a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
+        #  a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
+        #end
+        a["hda"] = Volume.new(config[:hd]).path if config[:hd]
+        a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
         a["device"] << ["usb-tablet"]
       end
-      a
+      a.merge(extra)
     end
     
     def format_option (option)

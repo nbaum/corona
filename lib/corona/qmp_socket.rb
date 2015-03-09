@@ -12,15 +12,18 @@ module Corona
       readline
       @id, @tickets = 0, {}
       Thread.new do
-        loop do
-          v = JSON.parse(readline)
-          if ticket = @tickets[v["id"]]
-            if res = v["return"]
-              ticket.push [true, res]
-            elsif err = v["error"]
-              ticket.push [false, err]
+        begin
+          loop do
+            v = JSON.parse(readline)
+            if ticket = @tickets[v["id"]]
+              if res = v["return"]
+                ticket.push [true, res]
+              elsif err = v["error"]
+                ticket.push [false, err]
+              end
             end
           end
+        rescue EOFError
         end
       end
       execute("qmp_capabilities")
