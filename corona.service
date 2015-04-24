@@ -2,3 +2,5 @@
 User=corona
 ExecStart=/bin/bash -lc '/home/corona/current/run'
 
+[Install]
+WantedBy=multi-user.target
