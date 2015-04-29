@@ -20,8 +20,16 @@ module Corona
       self.config = config if config
     end
     
+    def start_ports
+      config[:ports].each.with_index do |port|
+        tap = system "bin/create_tap", port[:net], port[:if], port[:mac]
+        port[:tap] = "/dev/tap#{tap.to_i}"
+      end
+    end
+
     def start (args = {})
       configure_guest_config
+      start_ports
       super(command(args))
       File.write(path("command"), command(args).shelljoin)
       if !config[:password].empty?
@@ -174,8 +182,11 @@ module Corona
       else
         a["vnc"] = [[":#{config[:display]}", "password"]]
       end
-      a["netdev"] = [["bridge", id: "netdev0", br: ENV["BRIDGE"]]]
-      a["device"] << [["e1000-82545em", netdev: "netdev0"]]
+      a["net"] = []
+      config[:ports].each.with_index do |port, i|
+        a["net"] << ["tap", vlan: i, ifname: port[:tap], name: "net#{i}", script: "no", downscript: "no", helper: "no"]
+        a["device"] << [["e1000-82545em", name: "if#{i}", vlan: i]]
+      end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
