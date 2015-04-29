@@ -1,3 +1,4 @@
+require 'open3'
 require 'corona/task'
 require 'corona/qmp_socket'
 
@@ -126,6 +127,11 @@ module Corona
     end
     
     private
+
+    def system (*command, &block)
+      out, status = Open3.capture2e(*command)
+      status.success? ? out : raise(out)
+    end
     
     def configure_guest_config
       return unless config[:guest_data]
