@@ -5,21 +5,21 @@ require 'corona/qmp_socket'
 require 'yaml'
 
 module Corona
-  
+
   class Instance < Task
     include Cached
-    
+
     attr_reader :config
-    
+
     def self.[] (id)
       new(id)
     end
-    
+
     def initialize (id, config = nil)
       super(id)
       self.config = config if config
     end
-    
+
     def start_ports
       config[:ports].each.with_index do |port|
         tap = system "bin/create_tap", port[:net], port[:if], port[:mac]
@@ -37,7 +37,7 @@ module Corona
       end
       qmp("cont")
     end
-    
+
     def status
       if !running?
         :stopped
@@ -45,17 +45,17 @@ module Corona
         :running
       end
     end
-    
+
     def config ()
       @config ||= (YAML.load(File.read(path("config.yml"))) rescue {})
     end
-    
+
     def config= (data)
       mkpath
       File.write(path("config.yml"), data.to_yaml)
       @config = data
     end
-    
+
     def command (args = {})
       s = ["qemu-system-x86_64"]
       arguments(args).each do |option, values|
@@ -74,11 +74,11 @@ module Corona
       end
       s
     end
-    
+
     def state_path (*tag)
       File.join("var", "state", *tag)
     end
-    
+
     def migrate_to (host_or_file, port = nil)
       raise "I can't migrate a VM that isn't running" unless running?
       uri = if port
@@ -94,7 +94,7 @@ module Corona
       end
       raise "Migration failed: #{log}" if qmp("query-migrate")["status"] == "failed"
     end
-    
+
     def migrate_from (host_or_file, port = nil)
       uri = if port
         "tcp:#{host_or_file}:#{port}"
@@ -109,15 +109,15 @@ module Corona
       end
       raise "Migration failed: #{log}" if qmp("query-migrate")["status"] == "failed"
     end
-    
+
     def pause ()
       qmp("stop")
     end
-    
+
     def unpause ()
       qmp("cont")
     end
-    
+
     def qmp (command, arguments = {})
       qmp_socket.execute(command, arguments)
     rescue Errno::EPIPE
@@ -125,22 +125,22 @@ module Corona
       sleep 0.1
       retry
     end
-    
+
     protected
-    
+
     def dhcp_host_line
       if config[:ip]
         "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
       end
     end
-    
+
     private
 
     def system (*command, &block)
       out, status = Open3.capture2e(*command)
       status.success? ? out : raise(out)
     end
-    
+
     def configure_guest_config
       return unless config[:guest_data]
       FileUtils.rm_rf(path("floppy"))
@@ -149,15 +149,15 @@ module Corona
         File.write(path("floppy", key), "#{value}\n")
       end
     end
-    
-    def qmp_socket ()
+
+    def qmp_socket
       raise NotRunning, log unless running?
       @socket ||= QmpSocket.new(path("qmp"))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 0.1
       retry
     end
-    
+
     def default_arguments
       {
         "qmp" => [["unix:#{path("qmp")}", "server", "nowait", "nodelay"]],
@@ -171,9 +171,10 @@ module Corona
         "fda" => "fat:floppy:12:#{path("floppy")}"
       }
     end
-    
+
     def arguments (extra = {})
       a = default_arguments.merge(config["arguments"] || {})
+      gd = config[:guest_data]
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
       a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "1500"]
@@ -184,9 +185,13 @@ module Corona
       end
       a["net"] = []
       config[:ports].each.with_index do |port, i|
-        a["net"] << ["tap", vlan: i, ifname: port[:tap], name: "net#{i}", script: "no", downscript: "no", helper: "no"]
+        # TODO: make macvtap named port[:tap] connected to port[:net]
+        a["net"] << ["tap", vlan: i, ifname: port[:tap], name: "net#{i}", script: "no", downscript: "no"]
         a["device"] << [["e1000-82545em", name: "if#{i}", vlan: i]]
       end
+      #a["net"] = [["tap", ]]
+      #a["net"] << ["user", vlan: 0, restrict: "on", net: "#{gd[:address]}/#{gd[:prefix]}", dhcpstart: "#{gd[:address]}"]
+      #a["net"] << ["nic", vlan: 0]
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
@@ -194,22 +199,22 @@ module Corona
         a["device"] << ["usb-kbd"]
         a["device"] << ["usb-mouse"]
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
-        a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
+        a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
         a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
         if config[:cd]
-          a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
+          a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
           a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       else
-        #a["device"] << ["isa-ide"]
-        #a["device"] << ["ide-drive", bus: "ide.2", drive: "drive0"]
-        #a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        #a["device"] << ["piix3-ide"]
+        #a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
+        #a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path, discard: "unmap", format: "raw", "detect-zeroes" => "unmap"]
         #if config[:cd]
-        #  a["device"] << ["ide-drive", bus: "ide.0", drive: "drive1"]
-        #  a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
+        #  a["device"] << ["ide-cd", bus: "ide.1", drive: "drive1"]
+        #  a["drive"] << [id: "drive1", format: "raw", if: "none", readonly: "on", file: Volume.new(config[:cd]).path]
         #end
         a["hda"] = Volume.new(config[:hd]).path if config[:hd]
         a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
@@ -217,7 +222,7 @@ module Corona
       end
       a.merge(extra)
     end
-    
+
     def format_option (option)
       case option
       when Array
@@ -232,7 +237,7 @@ module Corona
         [option.to_s]
       end
     end
-    
+
   end
-  
+
 end
