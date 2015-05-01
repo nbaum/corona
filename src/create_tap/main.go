@@ -27,6 +27,7 @@ func main() {
 	}
 	net, name, mac := os.Args[1], os.Args[2], os.Args[3]
 	run("ip", "link", "add", "link", net, "name", name, "type", "macvtap", "mode", "bridge")
+	run2("ip", "link", "set", name, "down")
 	run2("ip", "link", "set", name, "address", mac, "up")
 	fmt.Printf("%s\n", run2("ip", "link", "show", name))
 }
