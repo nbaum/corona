@@ -2,7 +2,7 @@ package main
 
 import "os"
 import "os/exec"
-import "strings"
+import "regexp"
 import "log"
 import "fmt"
 
@@ -30,8 +30,7 @@ func main() {
 	run("ip", "link", "add", "link", net, "name", name, "type", "macvtap", "mode", "bridge")
 	run2("ip", "link", "set", name, "down")
 	run2("ip", "link", "set", name, "address", mac, "up")
-	str := run2("ip", "link", "show", name)
-	num := str[0:strings.LastIndexAny(str, "0123456789") + 1]
+	num := regexp.MustCompile("[0-9]+").FindString(run2("ip", "link", "show", name))
 	run2("chown", "corona:corona", fmt.Sprintf("/dev/tap%s", num))
 	fmt.Println("%s", num)
 }
