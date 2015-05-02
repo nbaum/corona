@@ -184,7 +184,7 @@ module Corona
       a["net"] = []
       config[:ports].each.with_index do |port, i|
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
-        a["device"] << [["e1000-82545em", vlan: i]]
+        a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
       end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
