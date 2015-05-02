@@ -22,8 +22,6 @@ module Corona
 
     def start_ports
       config[:ports].each.with_index do |port|
-        tap = system "bin/create_tap", port[:net], port[:if], port[:mac]
-        port[:tap] = "/dev/tap#{tap.to_i}"
       end
     end
 
@@ -185,13 +183,9 @@ module Corona
       end
       a["net"] = []
       config[:ports].each.with_index do |port, i|
-        # TODO: make macvtap named port[:tap] connected to port[:net]
-        a["net"] << ["tap", vlan: i, ifname: port[:tap], name: "net#{i}", script: "no", downscript: "no"]
-        a["device"] << [["e1000-82545em", name: "if#{i}", vlan: i]]
+        a["net"] << ["bridge", vlan: i, name: port[:tap], br: port[:net]]
+        a["device"] << [["e1000-82545em", vlan: i]]
       end
-      #a["net"] = [["tap", ]]
-      #a["net"] << ["user", vlan: 0, restrict: "on", net: "#{gd[:address]}/#{gd[:prefix]}", dhcpstart: "#{gd[:address]}"]
-      #a["net"] << ["nic", vlan: 0]
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
         a["cpu"] = "core2duo"
