@@ -183,7 +183,7 @@ module Corona
       end
       a["net"] = []
       config[:ports].each.with_index do |port, i|
-        a["net"] << ["bridge", vlan: i, name: port[:tap], br: port[:net]]
+        a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
         a["device"] << [["e1000-82545em", vlan: i]]
       end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
