@@ -1,6 +1,6 @@
 module Corona
 
-  Error = Class.new(Exception)
+  Error = Class.new(StandardError)
 
   NotRunning = Class.new(Error)
 
