@@ -1,5 +1,6 @@
 set :application, 'corona'
 set :repo_url, 'corona@84.45.122.187:repo'
+set :use_sudo, nil
 
 set :deploy_to, '/home/corona'
 
@@ -10,8 +11,10 @@ set :keep_releases, 5
 
 namespace :deploy do
   task :restart do
-    on roles(:sys), in: :sequence, wait: 2 do
-      execute "systemctl restart corona"
+    on roles :root do
+      execute :cp, "~corona/current/corona.service", "/etc/systemd/system"
+      execute :systemctl, "daemon-reload"
+      execute :systemctl, "restart corona"
     end
   end
 end
