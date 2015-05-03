@@ -1,6 +1,7 @@
 [Service]
 User=corona
-ExecStart=/bin/bash -lc '/home/corona/current/run'
+KillMode=process
+ExecStart=/bin/bash -lc 'exec /home/corona/current/run'
 
 [Install]
 WantedBy=multi-user.target
