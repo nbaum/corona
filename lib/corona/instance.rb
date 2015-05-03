@@ -188,7 +188,7 @@ module Corona
       end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       if config[:type] == "mac"
-        a["cpu"] = "core2duo"
+        a["cpu"] = "host,+vmx"
         a["machine"] = "q35"
         a["device"] << ["usb-kbd"]
         a["device"] << ["usb-mouse"]
@@ -203,6 +203,7 @@ module Corona
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       else
+        a["cpu"] = "host,+vmx"
         #a["device"] << ["piix3-ide"]
         #a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
         #a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path, discard: "unmap", format: "raw", "detect-zeroes" => "unmap"]
