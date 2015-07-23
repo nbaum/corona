@@ -75,7 +75,19 @@ module Corona
       instance.migrate_from(params[:tag])
       true
     end
-    
+
+    def do_migrate_to
+      instance.config = params[:config]
+      instance.migrate_to(params[:host], params[:port])
+      true
+    end
+
+    def do_migrate_from
+      instance.config = params[:config]
+      instance.migrate_from(params[:host], params[:port])
+      true
+    end
+
     def do_realize ()
       if base = params[:base]
         Volume.new(params[:path], params[:pool]).

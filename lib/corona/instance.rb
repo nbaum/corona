@@ -87,10 +87,7 @@ module Corona
         "exec:cat>#{path.shellescape}"
       end
       qmp(:migrate, uri: uri)
-      while ["setup", "active"].member?(p qmp("query-migrate")["status"])
-        sleep 0.1
-      end
-      raise "Migration failed: #{log}" if qmp("query-migrate")["status"] == "failed"
+      migrate_wait()
     end
 
     def migrate_from (host_or_file, port = nil)
@@ -102,6 +99,9 @@ module Corona
         "exec:cat<#{path.shellescape}"
       end
       start(incoming: uri)
+    end
+
+    def migrate_wait ()
       while ["setup", "active"].member?(p qmp("query-migrate")["status"])
         sleep 0.1
       end
