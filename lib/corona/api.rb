@@ -88,6 +88,18 @@ module Corona
       true
     end
 
+    def do_migrate_status
+      instance.migrate_status
+    end
+
+    def do_migrate_wait
+      instance.migrate_wait
+    end
+
+    def do_migrate_cancel
+      instance.migrate_cancel
+    end
+
     def do_realize ()
       if base = params[:base]
         Volume.new(params[:path], params[:pool]).
