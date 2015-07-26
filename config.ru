@@ -8,5 +8,6 @@ require 'dotenv'
 Dotenv.load
 
 use Rack::Reloader, 0
+use Rack::Lock
 
 run -> env { Corona::API.new.call(env) }
