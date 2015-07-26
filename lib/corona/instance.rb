@@ -87,7 +87,7 @@ module Corona
         "exec:cat>#{path.shellescape}"
       end
       qmp(:migrate, uri: uri)
-      qmp(:migrate_set_speed, value: 10000)
+      qmp(:migrate_set_speed, value: 0)
     end
 
     def migrate_from (host_or_file, port = nil)
