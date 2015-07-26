@@ -1,5 +1,5 @@
 set :application, 'corona'
-set :repo_url, 'corona@84.45.122.187:repo'
+set :repo_url, 'ssh://git@fabric.orbitalinformatics.co.uk/diffusion/C/corona.git'
 set :use_sudo, nil
 
 set :deploy_to, '/home/corona'
