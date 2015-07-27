@@ -106,16 +106,16 @@ module Corona
     end
 
     def migrate_status
-      qmp("query-migrate") rescue {}
+      qmp("query-migrate")
     end
 
     def migrate_wait
-      qm = p qmp("query-migrate")
+      qm = qmp("query-migrate")
       case status = qm["status"]
       when "setup", "active"
-        false
+        qm
       when "completed"
-        true
+        false
       else
         raise "Migration #{status}"
       end
