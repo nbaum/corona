@@ -216,57 +216,57 @@ module Corona
         a["device"] << ["usb-kbd"]
         a["device"] << ["usb-mouse"]
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
-        if config[:hd]
+        if hd = config[:hd]
           a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
-          a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+          a["drive"] << [id: "drive0", format: "raw", if: "none", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(hd[:path]).path]
         end
-        if config[:cd]
+        if cd = config[:cd]
           a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
       when "pc"
         a["cpu"] = "qemu64,+vmx"
-        if config[:hd]
-          a["drive"] << [id: "drive0", format: "raw", if: "ide", file: Volume.new(config[:hd]).path]
+        if hd = config[:hd]
+          a["drive"] << [id: "drive0", format: "raw", if: "ide", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
         end
-        if config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        if cd = config[:cd]
+          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "sas"
         a["cpu"] = "qemu64,+vmx"
         a["device"] << ["megasas-gen2", id: "bus0"]
-        if config[:hd]
+        if hd = config[:hd]
           a["device"] << ["scsi-hd", bus: "bus0.0", drive: "drive0"]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", file: Volume.new(config[:hd]).path]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
         end
-        if config[:cd]
+        if cd = config[:cd]
           a["device"] << ["scsi-cd", bus: "bus0.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "virtio"
         a["cpu"] = "qemu64,+vmx"
-        if config[:hd]
-          a["drive"] << [id: "drive0", if: "virtio", format: "raw", file: Volume.new(config[:hd]).path]
+        if hd = config[:hd]
+          a["drive"] << [id: "drive0", if: "virtio", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
         end
-        if config[:cd]
-          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        if cd = config[:cd]
+          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "vmware"
         a["cpu"] = "qemu64,+vmx"
         a["vga"] = "vmware"
         a["device"] << [["pvscsi", id: "scsi0"]]
-        if config[:hd]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", file: Volume.new(config[:hd]).path]
+        if hd = config[:hd]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
           a["device"] << [["scsi-hd", drive: "drive0", bus: "scsi0.0"]]
         end
-        if config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        if cd = config[:cd]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
           a["device"] << [["scsi-cd", drive: "drive1", bus: "scsi0.0"]]
         end
         a["device"] << ["usb-tablet"]
