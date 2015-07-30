@@ -206,6 +206,7 @@ module Corona
           a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
         end
       end
+      a["watchdog"] = ["i6300esb"]
       a["device"] << [["pvpanic"]]
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       case config[:type]
