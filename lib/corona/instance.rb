@@ -197,7 +197,14 @@ module Corona
       a["net"] = []
       config[:ports].each.with_index do |port, i|
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
-        a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
+        case config[:type]
+        when "virtio"
+          a["device"] << [["virtio-net", vlan: i, mac: port[:mac]]]
+        when "vmware"
+          a["device"] << [["vmxnet3", vlan: i, mac: port[:mac]]]
+        else
+          a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
+        end
       end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       case config[:type]
