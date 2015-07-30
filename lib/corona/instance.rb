@@ -200,32 +200,66 @@ module Corona
         a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
       end
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
-      if config[:type] == "mac"
-        a["cpu"] = "host,+vmx"
+      case config[:type]
+      when "mac"
+        a["cpu"] = "Broadwell,+vmx"
         a["machine"] = "q35"
         a["device"] << ["usb-kbd"]
         a["device"] << ["usb-mouse"]
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
-        a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
-        a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        if config[:hd]
+          a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
+          a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path]
+        end
         if config[:cd]
           a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", snapshot: "on", file: Volume.new(config[:cd]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
         a["smbios"] = [{type: 2}]
-      else
-        a["cpu"] = "host,+vmx"
-        #a["device"] << ["piix3-ide"]
-        #a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
-        #a["drive"] << [id: "drive0", if: "none", file: Volume.new(config[:hd]).path, discard: "unmap", format: "raw", "detect-zeroes" => "unmap"]
-        #if config[:cd]
-        #  a["device"] << ["ide-cd", bus: "ide.1", drive: "drive1"]
-        #  a["drive"] << [id: "drive1", format: "raw", if: "none", readonly: "on", file: Volume.new(config[:cd]).path]
-        #end
-        a["hda"] = Volume.new(config[:hd]).path if config[:hd]
-        a["cdrom"] = Volume.new(config[:cd]).path if config[:cd]
+      when "pc"
+        a["cpu"] = "qemu64,+vmx"
+        if config[:hd]
+          a["drive"] << [id: "drive0", format: "raw", if: "ide", file: Volume.new(config[:hd]).path]
+        end
+        if config[:cd]
+          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        end
+        a["device"] << ["usb-tablet"]
+      when "sas"
+        a["cpu"] = "qemu64,+vmx"
+        a["device"] << ["megasas-gen2", id: "bus0"]
+        if config[:hd]
+          a["device"] << ["scsi-hd", bus: "bus0.0", drive: "drive0"]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", file: Volume.new(config[:hd]).path]
+        end
+        if config[:cd]
+          a["device"] << ["scsi-cd", bus: "bus0.0", drive: "drive1"]
+          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        end
+        a["device"] << ["usb-tablet"]
+      when "virtio"
+        a["cpu"] = "qemu64,+vmx"
+        if config[:hd]
+          a["drive"] << [id: "drive0", if: "virtio", format: "raw", file: Volume.new(config[:hd]).path]
+        end
+        if config[:cd]
+          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+        end
+        a["device"] << ["usb-tablet"]
+      when "vmware"
+        a["cpu"] = "qemu64,+vmx"
+        a["vga"] = "vmware"
+        a["device"] << [["pvscsi", id: "scsi0"]]
+        if config[:hd]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", file: Volume.new(config[:hd]).path]
+          a["device"] << [["scsi-hd", drive: "drive0", bus: "scsi0.0"]]
+        end
+        if config[:cd]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd]).path]
+          a["device"] << [["scsi-cd", drive: "drive1", bus: "scsi0.0"]]
+        end
         a["device"] << ["usb-tablet"]
       end
       a.merge(extra)
