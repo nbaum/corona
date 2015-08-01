@@ -1,75 +1,77 @@
+# encoding: utf-8
+# Copyright (c) 2015 Nathan Baum
 
 module Corona
-  
+
   class API
-    
+
     attr_reader :params
-    
+
     def call (env)
       @request = Rack::Request.new(env)
       @response = Rack::Response.new
       dispatch
     end
-    
-    def do_list_volumes ()
+
+    def do_list_volumes
       Volume.list(params[:pool]).map do |v|
         {
           name: v.name,
           pool: v.pool,
-          size: v.size
+          size: v.size,
         }
       end
     end
-    
-    def do_log ()
+
+    def do_log
       instance.log
     end
-    
-    def do_start ()
+
+    def do_start
       instance.config = params[:config]
       instance.start
       true
     end
-    
-    def do_pause ()
+
+    def do_pause
       instance.pause
       true
     end
 
-    def do_unpause ()
+    def do_unpause
       instance.unpause
       true
     end
 
-    def do_stop ()
+    def do_stop
       i = instance
       i.stop
       sleep 0.1 while i.running?
       true
     end
-    
-    def do_status ()
+
+    def do_status
       instance.status
     end
-    
-    def do_clone ()
+
+    def do_clone
       instance(:new_instance).clone(instance)
       true
     end
-    
+
     def do_reset
       instance.qmp(:system_reset)
     end
-    
+
     def do_command
       instance.command
     end
-    
+
     def do_suspend
       instance.migrate_to(params[:tag])
       true
     end
-    
+
     def do_resume
       instance.config = params[:config]
       instance.migrate_from(params[:tag])
@@ -100,30 +102,30 @@ module Corona
       instance.migrate_cancel
     end
 
-    def do_realize ()
+    def do_realize
       if base = params[:base]
-        Volume.new(params[:path], params[:pool]).
-            clone(Volume.new(base[:path], base[:pool]))
+        Volume.new(params[:path], params[:pool])
+          .clone(Volume.new(base[:path], base[:pool]))
       else
         Volume.new(params[:path], params[:pool]).truncate(params[:size])
       end
     end
-    
-    def do_delete ()
+
+    def do_delete
       Volume.new(params[:path], params[:pool]).remove
     end
-  
+
     def do_wipe
       Volume.new(params[:path], params[:pool]).wipe
     end
-  
+
     private
-    
+
     def instance (param = :instance)
       Instance[params[param]]
     end
-    
-    def dispatch ()
+
+    def dispatch
       @params = YAML.load(@request.body.read)
       name = @request.path[1..-1]
       res = __send__("do_" + name)
@@ -136,8 +138,7 @@ module Corona
       @response.status = 500
       @response.finish
     end
-    
-  end
-  
-end
 
+  end
+
+end

@@ -1,12 +1,15 @@
-require 'open3'
-require 'corona/task'
-require 'corona/qmp_socket'
+# encoding: utf-8
+# Copyright (c) 2015 Nathan Baum
 
-require 'yaml'
+require "open3"
+require "corona/task"
+require "corona/qmp"
+require "yaml"
 
 module Corona
 
   class Instance < Task
+
     include Cached
 
     attr_reader :config
@@ -20,19 +23,11 @@ module Corona
       self.config = config if config
     end
 
-    def start_ports
-      config[:ports].each.with_index do |port|
-      end
-    end
-
     def start (args = {})
       configure_guest_config
-      start_ports
       super(command(args))
       File.write(path("command"), command(args).shelljoin)
-      if !config[:password].empty?
-        qmp("set_password", protocol: "vnc", password: config[:password])
-      end
+      qmp("set_password", protocol: "vnc", password: config[:password]) unless config[:password].empty?
       qmp("cont")
     end
 
@@ -44,8 +39,10 @@ module Corona
       end
     end
 
-    def config ()
-      @config ||= (YAML.load(File.read(path("config.yml"))) rescue {})
+    def config
+      @config ||= YAML.load(File.read(path("config.yml")))
+    rescue
+      @config = {}
     end
 
     def config= (data)
@@ -65,8 +62,8 @@ module Corona
           else
             s << "-#{option}"
             s << format_option(value).map do |v|
-              v.gsub(',', ',,')
-            end.join(',')
+              v.gsub(",", ",,")
+            end.join(",")
           end
         end
       end
@@ -78,26 +75,26 @@ module Corona
     end
 
     def migrate_to (host_or_file, port = nil)
-      raise "I can't migrate a VM that isn't running" unless running?
+      fail "I can't migrate a VM that isn't running" unless running?
       uri = if port
-        "tcp:#{host_or_file}:#{port}"
-      else
-        FileUtils.mkpath state_path
-        path = state_path(host_or_file)
-        "exec:cat>#{path.shellescape}"
-      end
+              "tcp:#{host_or_file}:#{port}"
+            else
+              FileUtils.mkpath state_path
+              path = state_path(host_or_file)
+              "exec:cat>#{path.shellescape}"
+            end
       qmp(:migrate, uri: uri)
       qmp(:migrate_set_speed, value: 0)
     end
 
     def migrate_from (host_or_file, port = nil)
       uri = if port
-        "tcp:#{host_or_file}:#{port}"
-      else
-        FileUtils.mkpath state_path
-        path = state_path(host_or_file)
-        "exec:cat<#{path.shellescape}"
-      end
+              "tcp:#{host_or_file}:#{port}"
+            else
+              FileUtils.mkpath state_path
+              path = state_path(host_or_file)
+              "exec:cat<#{path.shellescape}"
+            end
       start(incoming: uri)
     end
 
@@ -117,15 +114,15 @@ module Corona
       when "completed"
         false
       else
-        raise "Migration #{status}"
+        fail "Migration #{status}"
       end
     end
 
-    def pause ()
+    def pause
       qmp("stop")
     end
 
-    def unpause ()
+    def unpause
       qmp("cont")
     end
 
@@ -140,16 +137,14 @@ module Corona
     protected
 
     def dhcp_host_line
-      if config[:ip]
-        "#{config[:mac]},#{config[:ip]},#{config[:hostname]}"
-      end
+      "#{config[:mac]},#{config[:ip]},#{config[:hostname]}" if config[:ip]
     end
 
     private
 
-    def system (*command, &block)
+    def system (*command, &_block)
       out, status = Open3.capture2e(*command)
-      status.success? ? out : raise(out)
+      status.success? ? out : fail(out)
     end
 
     def configure_guest_config
@@ -162,8 +157,8 @@ module Corona
     end
 
     def qmp_socket
-      raise NotRunning, log unless running?
-      @socket ||= QmpSocket.new(path("qmp"))
+      fail NotRunning, log unless running?
+      @socket ||= QMP.new(UNIXSocket.new(path("qmp")))
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 0.1
       retry
@@ -171,7 +166,7 @@ module Corona
 
     def default_arguments
       {
-        "qmp" => [["unix:#{path("qmp")}", "server", "nowait", "nodelay"]],
+        "qmp" => [["unix:#{path('qmp')}", "server", "nowait", "nodelay"]],
         "nodefaults" => true,
         "enable-kvm" => true,
         "S" => true,
@@ -179,13 +174,13 @@ module Corona
         "drive" => [],
         "device" => [],
         "usb" => true,
-        "fda" => "fat:floppy:12:#{path("floppy")}"
+        "fda" => "fat:floppy:12:#{path('floppy')}",
       }
     end
 
+    # rubocop:disable Metrics/MethodLength, Metrics/PerceivedComplexity
     def arguments (extra = {})
       a = default_arguments.merge(config["arguments"] || {})
-      gd = config[:guest_data]
       a["m"] = config[:memory]
       a["smp"] = config[:cores]
       a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "1500"]
@@ -218,22 +213,26 @@ module Corona
         a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
         if hd = config[:hd]
           a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
-          a["drive"] << [id: "drive0", format: "raw", if: "none", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(hd[:path]).path]
+          a["drive"] << [id: "drive0", format: "raw", if: "none", snapshot: hd[:ephemeral] ? "on" : "off",
+                         file: Volume.new(hd[:path]).path]
         end
         if cd = config[:cd]
           a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
+                         file: Volume.new(cd[:path]).path]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
-        a["smbios"] = [{type: 2}]
+        a["smbios"] = [{ type: 2 }]
       when "pc"
         a["cpu"] = "qemu64,+vmx"
         if hd = config[:hd]
-          a["drive"] << [id: "drive0", format: "raw", if: "ide", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
+          a["drive"] << [id: "drive0", format: "raw", if: "ide", snapshot: hd[:ephemeral] ? "on" : "off",
+                         file: Volume.new(hd[:path]).path]
         end
         if cd = config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on",
+                         file: Volume.new(cd[:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "sas"
@@ -241,20 +240,24 @@ module Corona
         a["device"] << ["megasas-gen2", id: "bus0"]
         if hd = config[:hd]
           a["device"] << ["scsi-hd", bus: "bus0.0", drive: "drive0"]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                         file: Volume.new(hd[:path]).path]
         end
         if cd = config[:cd]
           a["device"] << ["scsi-cd", bus: "bus0.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
+          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on",
+                         file: Volume.new(cd[:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "virtio"
         a["cpu"] = "qemu64,+vmx"
         if hd = config[:hd]
-          a["drive"] << [id: "drive0", if: "virtio", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
+          a["drive"] << [id: "drive0", if: "virtio", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                         file: Volume.new(hd[:path]).path]
         end
         if cd = config[:cd]
-          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
+          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on",
+                         file: Volume.new(cd[:path]).path]
         end
         a["device"] << ["usb-tablet"]
       when "vmware"
@@ -262,17 +265,20 @@ module Corona
         a["vga"] = "vmware"
         a["device"] << [["pvscsi", id: "scsi0"]]
         if hd = config[:hd]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", file: Volume.new(config[:hd][:path]).path]
+          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                         file: Volume.new(hd[:path]).path]
           a["device"] << [["scsi-hd", drive: "drive0", bus: "scsi0.0"]]
         end
         if cd = config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on", file: Volume.new(config[:cd][:path]).path]
+          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
+                         file: Volume.new(cd[:path]).path]
           a["device"] << [["scsi-cd", drive: "drive1", bus: "scsi0.0"]]
         end
         a["device"] << ["usb-tablet"]
       end
       a.merge(extra)
     end
+    # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity
 
     def format_option (option)
       case option

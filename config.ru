@@ -1,11 +1,15 @@
-#\ -w -o 0.0.0.0 -p 9000
+# encoding: utf-8
+# Copyright (c) 2015 Nathan Baum
 
-$: << "lib"
+require "English"
+$LOAD_PATH << "lib"
 
-require 'corona'
-require 'dotenv'
+require "corona"
+require "dotenv"
 
 Dotenv.load
+
+Thread.abort_on_exception = true
 
 use Rack::Reloader, 0
 use Rack::Lock
