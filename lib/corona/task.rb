@@ -17,8 +17,14 @@ module Corona
 
     include Cached
 
-    def self.path (extra = "")
-      File.expand_path(File.join("var", name.split("::")[-1].downcase.pluralize, extra))
+    def self.path (*parts)
+      Corona.path(*name.split("::")[-1].downcase.pluralize, *parts)
+    end
+
+    def path (*parts)
+      self.class.path(@id, *parts)
+    end
+
     end
 
     def self.all

@@ -10,8 +10,8 @@ module Corona
 
     attr_accessor :name, :pool
 
-    def self.root (*parts)
-      File.join(File.expand_path("var/storage"), *parts)
+    def self.path (*parts)
+      Corona.path("storage", *parts)
     end
 
     def self.list (pool)
@@ -41,8 +41,8 @@ module Corona
       @name = name
     end
 
-    def path
-      File.join(File.expand_path("var/storage"), @pool || "", @name)
+    def path (*parts)
+      self.class.path(@pool || "", @name, *parts)
     end
 
     def exist?
