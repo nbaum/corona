@@ -9,10 +9,10 @@ module Corona
   class QMP
 
     def initialize (io)
-      readline
       @id = 0
       @tickets = {}
       @io = io
+      @io.readline
       start_thread
     end
 
