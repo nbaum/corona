@@ -24,7 +24,8 @@ module Corona
     def watch (task)
       if task.running?
         @notifier.watch("/proc/#{task.pid}/exe", :close_nowrite) do
-          task.cleanup unless task.running?
+          sleep 0.1
+          watch task
         end
       else
         task.cleanup
