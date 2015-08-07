@@ -171,10 +171,9 @@ module Corona
         "enable-kvm" => true,
         "S" => true,
         "vga" => "std",
-        "drive" => [],
+        "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw"],
         "device" => [],
         "usb" => true,
-        "fda" => "fat:floppy:12:#{path('floppy')}",
       }
     end
 
