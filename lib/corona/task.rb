@@ -25,8 +25,6 @@ module Corona
       self.class.path(@id, *parts)
     end
 
-    end
-
     def self.all
       Dir[path("*")].map do |path|
         Instance[File.basename(path)]
