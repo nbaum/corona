@@ -15,7 +15,7 @@ module Corona
     end
 
     def self.list (pool)
-      Dir.chdir(root(pool)) do
+      Dir.chdir(path(pool)) do
         Dir["**/*"].select do |name|
           File.file?(name)
         end.map do |name|
