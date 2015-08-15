@@ -25,6 +25,7 @@ module Corona
 
     def start (args = {})
       configure_guest_config
+      configure_dhcp
       super(command(args))
       File.write(path("command"), command(args).shelljoin)
       qmp("set_password", protocol: "vnc", password: config[:password]) unless config[:password].empty?
@@ -153,6 +154,19 @@ module Corona
       FileUtils.mkpath(path("floppy"))
       config[:guest_data].each do |key, value|
         File.write(path("floppy", key), "#{value}\n")
+      end
+    end
+
+    def configure_dhcp
+      return unless gd = config[:guest_data]
+      ip = gd[:ipv4]
+      config[:ports].each do |port|
+        File.write Corona.path("dhcp/#{port[:mac]}"),
+                   { address: [ip[:address], ip[:prefix]].join("/"),
+                     gateway: ip[:gateway],
+                     dns: "8.8.8.8",
+                     hostname: gd[:hostname],
+                     vendor: @id.to_s }.to_json
       end
     end
 
