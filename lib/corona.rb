@@ -4,7 +4,7 @@
 module Corona
 
   def self.root
-    ROOT
+    ENV["CORONA_ROOT"] || "var"
   end
 
   def self.path (*parts)
