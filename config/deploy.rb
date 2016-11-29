@@ -2,7 +2,7 @@
 # Copyright (c) 2015 Nathan Baum
 
 set :application, "corona"
-set :repo_url, "ssh://git@fabric.orbitalinformatics.co.uk/diffusion/C/corona.git"
+set :repo_url, "https://github.com/nbaum/corona.git"
 set :use_sudo, nil
 
 set :deploy_to, "/home/corona"
