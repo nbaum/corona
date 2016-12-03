@@ -15,7 +15,14 @@ module Corona
     end
 
     def self.list (pool)
-      fail "Unimplemented"
+      list = []
+      dog("vdi", "list", "-r").split("\n").each do |row|
+        thepool, name = row.split(" ")[1].split("/")
+        next unless name
+        next unless pool == thepool
+        list << new(name, pool)
+      end
+      list
     end
 
     def initialize (name, pool = nil)
@@ -70,7 +77,7 @@ module Corona
     class ExecuteError < Exception
     end
 
-    def sh (*args)
+    def self.sh (*args)
       output = IO.popen(args.map(&:to_s).shelljoin, "r", err: [:child, :out]) do |io|
         io.read
       end
@@ -81,8 +88,16 @@ module Corona
       end
     end
 
-    def dog (*args)
+    def self.dog (*args)
       sh "dog", *args
+    end
+
+    def dog (*args)
+      self.class.dog(*args)
+    end
+
+    def sh (*args)
+      self.class.sh(*args)
     end
 
   end
