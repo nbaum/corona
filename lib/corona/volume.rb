@@ -35,13 +35,11 @@ module Corona
     end
 
     def truncate (size)
-      begin
-        dog "vdi", "check", "-e", path
-      rescue
+      if exist?
+        dog "vdi", "resize", path, size
+      else
         dog "vdi", "create", path, size
-        return
       end
-      dog "vdi", "resize", path, size
     end
 
     def clone_command (source)
@@ -76,6 +74,13 @@ module Corona
     private
 
     class ExecuteError < Exception
+    end
+
+    def exist?
+      dog "vdi", "check", "-e", path
+      return true
+    rescue
+      return false
     end
 
     def self.sh (*args)
