@@ -25,7 +25,6 @@ module Corona
 
     def start (args = {})
       configure_guest_config
-      configure_dhcp
       super(command(args))
       File.write(path("command"), command(args).shelljoin)
       qmp("set_password", protocol: "vnc", password: config[:password]) unless config[:password].empty?
@@ -227,12 +226,12 @@ module Corona
         if hd = config[:hd]
           a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
           a["drive"] << [id: "drive0", format: "raw", if: "none", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).path]
+                         file: Volume.new(hd[:path]).qemu_url]
         end
         if cd = config[:cd]
           a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
           a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).path]
+                         file: Volume.new(cd[:path]).qemu_url]
         end
         a["kernel"] = "./chameleon.bin"
         a["append"] = "idlehalt=0"
@@ -241,11 +240,11 @@ module Corona
         a["cpu"] = "qemu64,+vmx"
         if hd = config[:hd]
           a["drive"] << [id: "drive0", format: "raw", if: "ide", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).path]
+                         file: Volume.new(hd[:path]).qemu_url]
         end
         if cd = config[:cd]
           a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).path]
+                         file: Volume.new(cd[:path]).qemu_url]
         end
         a["device"] << ["usb-tablet"]
       when "sas"
@@ -254,23 +253,23 @@ module Corona
         if hd = config[:hd]
           a["device"] << ["scsi-hd", bus: "bus0.0", drive: "drive0"]
           a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).path]
+                         file: Volume.new(hd[:path]).qemu_url]
         end
         if cd = config[:cd]
           a["device"] << ["scsi-cd", bus: "bus0.0", drive: "drive1"]
           a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).path]
+                         file: Volume.new(cd[:path]).qemu_url]
         end
         a["device"] << ["usb-tablet"]
       when "virtio"
         a["cpu"] = "qemu64,+vmx"
         if hd = config[:hd]
           a["drive"] << [id: "drive0", if: "virtio", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).path]
+                         file: Volume.new(hd[:path]).qemu_url]
         end
         if cd = config[:cd]
           a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).path]
+                         file: Volume.new(cd[:path]).qemu_url]
         end
         a["device"] << ["usb-tablet"]
       when "vmware"
@@ -279,12 +278,12 @@ module Corona
         a["device"] << [["pvscsi", id: "scsi0"]]
         if hd = config[:hd]
           a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).path]
+                         file: Volume.new(hd[:path]).qemu_url]
           a["device"] << [["scsi-hd", drive: "drive0", bus: "scsi0.0"]]
         end
         if cd = config[:cd]
           a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).path]
+                         file: Volume.new(cd[:path]).qemu_url]
           a["device"] << [["scsi-cd", drive: "drive1", bus: "scsi0.0"]]
         end
         a["device"] << ["usb-tablet"]

@@ -11,29 +11,11 @@ module Corona
     attr_accessor :name, :pool
 
     def self.path (*parts)
-      Corona.path("storage", *parts)
+      File.join(*parts)
     end
 
     def self.list (pool)
-      Dir.chdir(path(pool)) do
-        Dir["**/*"].select do |name|
-          File.file?(name)
-        end.map do |name|
-          new(name, pool)
-        end
-      end
-    end
-
-    def self.create (name, pool)
-      v = new(name, pool)
-      fail Error, "#{path} already exists" if v.exist?
-      v
-    end
-
-    def self.open (name, pool)
-      v = new(name, pool)
-      fail Error, "#{path} doesn't exist" unless v.exist?
-      v
+      fail "Unimplemented"
     end
 
     def initialize (name, pool = nil)
@@ -42,51 +24,65 @@ module Corona
     end
 
     def path (*parts)
-      self.class.path(@pool || "", @name, *parts)
-    end
-
-    def exist?
-      File.exist? path
-    end
-
-    def make_path
-      FileUtils.mkpath(File.dirname(path))
-      FileUtils.touch(path)
+      @pool ? self.class.path(@pool, @name, *parts) : self.class.path(@name, *parts)
     end
 
     def truncate (size)
-      make_path
-      File.truncate(path, size)
+      begin
+        dog "vdi", "check", "-e", path
+        dog "vdi", "resize", path, size
+      rescue
+        dog "vdi", "create", path, size
+      end
     end
 
     def clone_command (source)
-      [
-        ["mkdir", "-p", File.dirname(path)],
-        ["cp", "--reflink=always", source.path, path],
-      ].map(&:shelljoin).join(";")
+      fail "Unimplemented"
     end
 
     def clone (source)
-      make_path
-      system("cp", "--reflink=always", source.path, path)
+      dog "vdi", "delete", "-s", "clone", source.path
+      dog "vdi", "snapshot", "-s", "clone", source.path
+      dog "vdi", "clone", "-s", "clone", source.path, path
+      dog "vdi", "delete", "-s", "clone", source.path
     end
 
     def remove
-      FileUtils.rm_f path
-    end
-
-    def stat
-      File.stat(path)
+      dog "vdi", "delete", path
     end
 
     def size
-      stat.size
+      dog("vdi", "list", "-r", path).split(" ")[3].to_i
     end
 
     def wipe
-      size = self.size
-      remove
-      truncate(size)
+      size_was = size
+      dog "vdi", "delete", path
+      truncate size_was
+    end
+
+    def qemu_url
+      "sheepdog:///#{path}"
+    end
+
+    private
+
+    class ExecuteError < Exception
+    end
+
+    def sh (*args)
+      output = IO.popen(args.map(&:to_s).shelljoin, "r", err: [:child, :out]) do |io|
+        io.read
+      end
+      if $?.success?
+        output
+      else
+        fail output
+      end
+    end
+
+    def dog (*args)
+      sh "dog", *args
     end
 
   end
