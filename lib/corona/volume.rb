@@ -38,6 +38,7 @@ module Corona
       if exist?
         dog "vdi", "resize", path, size
       else
+        dog "vdi", "create", path, size
       end
     end
 
@@ -46,10 +47,12 @@ module Corona
     end
 
     def clone (source)
-      dog "vdi", "delete", "-s", "clone", source.path
-      dog "vdi", "snapshot", "-s", "clone", source.path
-      dog "vdi", "clone", "-s", "clone", source.path, path
-      dog "vdi", "delete", "-s", "clone", source.path
+      unless exist?
+        dog "vdi", "delete", "-s", "clone", source.path
+        dog "vdi", "snapshot", "-s", "clone", source.path
+        dog "vdi", "clone", "-s", "clone", source.path, path
+        dog "vdi", "delete", "-s", "clone", source.path
+      end
     end
 
     def remove
