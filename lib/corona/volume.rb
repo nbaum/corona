@@ -38,7 +38,6 @@ module Corona
       if exist?
         dog "vdi", "resize", path, size
       else
-        dog "vdi", "create", path, size
       end
     end
 
@@ -79,8 +78,8 @@ module Corona
     def exist?
       dog "vdi", "check", "-e", path
       return true
-    #rescue
-    #  return false
+    rescue
+      return false
     end
 
     def self.sh (*args)
