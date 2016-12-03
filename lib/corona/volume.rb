@@ -37,10 +37,11 @@ module Corona
     def truncate (size)
       begin
         dog "vdi", "check", "-e", path
-        dog "vdi", "resize", path, size
       rescue
         dog "vdi", "create", path, size
+        return
       end
+      dog "vdi", "resize", path, size
     end
 
     def clone_command (source)
