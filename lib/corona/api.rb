@@ -63,6 +63,10 @@ module Corona
       instance.qmp(:system_reset)
     end
 
+    def do_qmp
+      instance.qmp(params[:execute], params[:arguments])
+    end
+
     def do_command
       instance.command
     end
