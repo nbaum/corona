@@ -69,6 +69,19 @@ module Corona
       truncate size_was
     end
 
+    def used
+      if @name
+        dog("vdi", "list", "-r", path).split(" ")[4].to_i
+      else
+        total = 0
+        dog("vdi", "list", "-r").split("\n").each do |line|
+          line = line.split(" ")
+          total += line[4].to_i if line[1].start_with?(@pool + "/")
+        end
+        total
+      end
+    end
+
     def qemu_url
       "sheepdog:///#{path}"
     end

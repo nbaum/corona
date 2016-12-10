@@ -123,6 +123,10 @@ module Corona
       Volume.new(params[:path], params[:pool]).wipe
     end
 
+    def do_space_used
+      Volume.new(params[:path], params[:pool]).used
+    end
+
     private
 
     def instance (param = :instance)
