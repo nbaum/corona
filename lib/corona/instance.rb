@@ -25,6 +25,7 @@ module Corona
 
     def start (args = {})
       configure_guest_config
+      configure_dhcp
       super(command(args))
       File.write(path("command"), command(args).shelljoin)
       qmp("set_password", protocol: "vnc", password: config[:password]) unless config[:password].empty?
@@ -207,11 +208,11 @@ module Corona
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
         case config[:type]
         when "virtio"
-          a["device"] << [["virtio-net", addr: i + 3, vlan: i, mac: port[:mac]]]
+          a["device"] << [["virtio-net", addr: port[:addr], vlan: i, mac: port[:mac]]]
         when "vmware"
-          a["device"] << [["vmxnet3", addr: i + 3, vlan: i, mac: port[:mac]]]
+          a["device"] << [["vmxnet3", addr: port[:addr], vlan: i, mac: port[:mac]]]
         else
-          a["device"] << [["e1000", addr: i + 3, vlan: i, mac: port[:mac]]]
+          a["device"] << [["e1000", addr: port[:addr], vlan: i, mac: port[:mac]]]
         end
       end
       a["watchdog"] = ["i6300esb"]
