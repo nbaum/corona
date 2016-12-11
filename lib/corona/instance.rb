@@ -158,11 +158,11 @@ module Corona
 
     def configure_dhcp
       return unless gd = config[:guest_data]
-      ip = gd[:ipv4]
       config[:ports].each do |port|
+        next unless port && port[:mac]
         File.write Corona.path("dhcp/#{port[:mac]}"),
-                   { address: [ip[:address], ip[:prefix]].join("/"),
-                     gateway: ip[:gateway],
+                   { address: [gd["net0.address"], gd["net0.prefix"]].join("/"),
+                     gateway: gd["net0.gateway"],
                      dns: "8.8.8.8",
                      hostname: gd[:hostname],
                      vendor: @id.to_s }.to_json
@@ -203,14 +203,15 @@ module Corona
       end
       a["net"] = []
       config[:ports].each.with_index do |port, i|
+        next unless port
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
         case config[:type]
         when "virtio"
-          a["device"] << [["virtio-net", vlan: i, mac: port[:mac]]]
+          a["device"] << [["virtio-net", addr: i + 3, vlan: i, mac: port[:mac]]]
         when "vmware"
-          a["device"] << [["vmxnet3", vlan: i, mac: port[:mac]]]
+          a["device"] << [["vmxnet3", addr: i + 3, vlan: i, mac: port[:mac]]]
         else
-          a["device"] << [["e1000-82545em", vlan: i, mac: port[:mac]]]
+          a["device"] << [["e1000", addr: i + 3, vlan: i, mac: port[:mac]]]
         end
       end
       a["watchdog"] = ["i6300esb"]
