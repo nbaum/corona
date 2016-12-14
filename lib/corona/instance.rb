@@ -143,7 +143,7 @@ module Corona
           qga_socket.execute(command, arguments || {})
         end
       rescue Timeout::Error, Errno::EPIPE, Errno::ECONNREFUSED, Errno::ENOENT => e
-        @qga_socket.close rescue nil if @qga_socket
+        @qga_socket.close if @qga_socket
         @qga_socket = nil
         fail "Guest agent doesn't seem to be running" if (tries -= 1) == 0
         sleep 0.1
