@@ -26,6 +26,7 @@ module Corona
       elsif err = v["error"]
         @responses.push [false, err]
       end
+    rescue Exception => e
     end
 
     def reset
