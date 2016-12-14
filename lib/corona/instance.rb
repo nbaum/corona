@@ -137,16 +137,18 @@ module Corona
     end
 
     def qga (command, arguments = {})
-      tries = 3
-      Timeout.timeout 1 do
-        qga_socket.execute(command, arguments || {})
+      tries = 2
+      begin
+        Timeout.timeout 0.25 do
+          qga_socket.execute(command, arguments || {})
+        end
+      rescue Timeout::Error, Errno::EPIPE, Errno::ECONNREFUSED, Errno::ENOENT => e
+        @qga_socket.close rescue nil if @qga_socket
+        @qga_socket = nil
+        fail "Guest agent doesn't seem to be running" if (tries -= 1) == 0
+        sleep 0.1
+        retry
       end
-    rescue Timeout::Error, Errno::EPIPE
-      @qga_socket.close rescue nil if @qga_socket
-      @qga_socket = nil
-      fail "Guest agent doesn't seem to be running" if --tries == 0
-      sleep 0.1
-      retry
     end
 
     protected
@@ -198,9 +200,6 @@ module Corona
         sock = UNIXSocket.new(path("qga"))
         QGA.new(sock)
       end
-    rescue Errno::ECONNREFUSED, Errno::ENOENT
-      sleep 0.1
-      retry
     end
 
     def default_arguments
