@@ -197,8 +197,8 @@ module Corona
     def qga_socket
       fail NotRunning, log unless running?
       @qga_socket ||= begin
-        sock = UNIXSocket.new(path("qga"))
-        QGA.new(sock)
+        @qga_socket = UNIXSocket.new(path("qga"))
+        QGA.new(@qga_socket)
       end
     end
 
