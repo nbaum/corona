@@ -67,6 +67,10 @@ module Corona
       instance.qmp(params[:execute], params[:arguments])
     end
 
+    def do_qga
+      instance.qga(params[:execute], params[:arguments])
+    end
+
     def do_command
       instance.command
     end

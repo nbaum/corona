@@ -4,6 +4,7 @@
 require "open3"
 require "corona/task"
 require "corona/qmp"
+require "corona/qga"
 require "yaml"
 
 module Corona
@@ -128,9 +129,22 @@ module Corona
     end
 
     def qmp (command, arguments = {})
-      qmp_socket.execute(command, arguments)
+      qmp_socket.execute(command, arguments || {})
     rescue Errno::EPIPE
-      @socket = nil
+      @qmp_socket = nil
+      sleep 0.1
+      retry
+    end
+
+    def qga (command, arguments = {})
+      tries = 3
+      Timeout.timeout 1 do
+        qga_socket.execute(command, arguments || {})
+      end
+    rescue Timeout::Error, Errno::EPIPE
+      @qga_socket.close rescue nil if @qga_socket
+      @qga_socket = nil
+      fail "Guest agent doesn't seem to be running" if --tries == 0
       sleep 0.1
       retry
     end
@@ -172,7 +186,18 @@ module Corona
 
     def qmp_socket
       fail NotRunning, log unless running?
-      @socket ||= QMP.new(UNIXSocket.new(path("qmp")))
+      @qmp_socket ||= QMP.new(UNIXSocket.new(path("qmp")))
+    rescue Errno::ECONNREFUSED, Errno::ENOENT
+      sleep 0.1
+      retry
+    end
+
+    def qga_socket
+      fail NotRunning, log unless running?
+      @qga_socket ||= begin
+        sock = UNIXSocket.new(path("qga"))
+        QGA.new(sock)
+      end
     rescue Errno::ECONNREFUSED, Errno::ENOENT
       sleep 0.1
       retry
@@ -186,8 +211,9 @@ module Corona
         "S" => true,
         "vga" => "std",
         "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw"],
-        "device" => [],
+        "device" => [["virtio-serial", addr: 7], ["virtserialport", chardev: 'qga0', name: 'org.qemu.guest_agent.0']],
         "usb" => true,
+        "chardev" => [["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')]]
       }
     end
 
@@ -195,7 +221,7 @@ module Corona
     def arguments (extra = {})
       a = default_arguments.merge(config["arguments"] || {})
       a["m"] = config[:memory]
-      a["smp"] = config[:cores]
+      a["smp"] = [cpus: config[:cores], maxcpus: 40]
       a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "1500"]
       if config[:password].empty?
         a["vnc"] = [[":#{config[:display]}"]]
