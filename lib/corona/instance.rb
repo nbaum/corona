@@ -231,90 +231,33 @@ module Corona
       config[:ports].each.with_index do |port, i|
         next unless port
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
-        case config[:type]
-        when "virtio"
-          a["device"] << [["virtio-net", addr: port[:addr], vlan: i, mac: port[:mac]]]
-        when "vmware"
-          a["device"] << [["vmxnet3", addr: port[:addr], vlan: i, mac: port[:mac]]]
-        else
-          a["device"] << [["e1000", addr: port[:addr], vlan: i, mac: port[:mac]]]
-        end
+        a["device"] << [["virtio-net", addr: port[:addr], vlan: i, mac: port[:mac]]]
       end
       a["watchdog"] = ["i6300esb"]
       a["device"] << [["pvpanic"]]
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
-      case config[:type]
-      when "mac"
-        a["cpu"] = "Broadwell,+vmx"
-        a["machine"] = "q35"
-        a["device"] << ["usb-kbd"]
-        a["device"] << ["usb-mouse"]
-        a["device"] << ["isa-applesmc", osk: "ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc"]
-        if hd = config[:hd]
-          a["device"] << ["ide-hd", bus: "ide.2", drive: "drive0"]
-          a["drive"] << [id: "drive0", format: "raw", if: "none", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).qemu_url]
-        end
-        if cd = config[:cd]
-          a["device"] << ["ide-cd", bus: "ide.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).qemu_url]
-        end
-        a["kernel"] = "./chameleon.bin"
-        a["append"] = "idlehalt=0"
-        a["smbios"] = [{ type: 2 }]
-      when "pc"
-        a["cpu"] = "qemu64,+vmx"
-        if hd = config[:hd]
-          a["drive"] << [id: "drive0", format: "raw", if: "ide", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).qemu_url]
-        end
-        if cd = config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "ide", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).qemu_url]
-        end
-        a["device"] << ["usb-tablet"]
-      when "sas"
-        a["cpu"] = "qemu64,+vmx"
-        a["device"] << ["megasas-gen2", id: "bus0"]
-        if hd = config[:hd]
-          a["device"] << ["scsi-hd", bus: "bus0.0", drive: "drive0"]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).qemu_url]
-        end
-        if cd = config[:cd]
-          a["device"] << ["scsi-cd", bus: "bus0.0", drive: "drive1"]
-          a["drive"] << [id: "drive1", if: "none", format: "raw", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).qemu_url]
-        end
-        a["device"] << ["usb-tablet"]
-      when "virtio"
-        a["cpu"] = "qemu64,+vmx"
-        if hd = config[:hd]
-          a["drive"] << [id: "drive0", if: "virtio", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).qemu_url]
-        end
-        if cd = config[:cd]
-          a["drive"] << [id: "drive1", if: "ide", format: "raw", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).qemu_url]
-        end
-        a["device"] << ["usb-tablet"]
-      when "vmware"
-        a["cpu"] = "qemu64,+vmx"
-        a["vga"] = "vmware"
-        a["device"] << [["pvscsi", id: "scsi0"]]
-        if hd = config[:hd]
-          a["drive"] << [id: "drive0", if: "none", format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
-                         file: Volume.new(hd[:path]).qemu_url]
-          a["device"] << [["scsi-hd", drive: "drive0", bus: "scsi0.0"]]
-        end
-        if cd = config[:cd]
-          a["drive"] << [id: "drive1", format: "raw", if: "none", media: "cdrom", snapshot: "on",
-                         file: Volume.new(cd[:path]).qemu_url]
-          a["device"] << [["scsi-cd", drive: "drive1", bus: "scsi0.0"]]
-        end
-        a["device"] << ["usb-tablet"]
+      a["cpu"] = "qemu64,+vmx"
+      if cd = config[:cd]
+        a["drive"] << [id: "drivex", if: "ide", format: "raw", media: "cdrom", snapshot: "on",
+                       file: Volume.new(cd[:path]).qemu_url]
       end
+      if hd = config[:hd] || config[:hda]
+        a["drive"] << [id: "drive0", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                       file: Volume.new(hd[:path]).qemu_url]
+      end
+      if hd = config[:hdb]
+        a["drive"] << [id: "drive1", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                       file: Volume.new(hd[:path]).qemu_url]
+      end
+      if hd = config[:hdc]
+        a["drive"] << [id: "drive2", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                       file: Volume.new(hd[:path]).qemu_url]
+      end
+      if hd = config[:hdd]
+        a["drive"] << [id: "drive3", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+                       file: Volume.new(hd[:path]).qemu_url]
+      end
+      a["device"] << ["usb-tablet"]
       a.merge(extra)
     end
     # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity
