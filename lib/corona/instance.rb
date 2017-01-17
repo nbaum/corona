@@ -242,7 +242,7 @@ module Corona
                        file: Volume.new(cd[:path]).qemu_url]
       end
       if hd = config[:hd] || config[:hda]
-        a["drive"] << [id: "drive0", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive0", if: "ide", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdb]
