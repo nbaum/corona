@@ -210,7 +210,7 @@ module Corona
         "S" => true,
         "vga" => "std",
         "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw"],
-        "virtfs" => [path: path('floppy'), mount_tag: 'config', security_model: 'none'],
+        "virtfs" => [['local', path: path('floppy'), mount_tag: 'config', security_model: 'none']],
         "device" => [["virtio-serial", addr: 7], ["virtserialport", chardev: 'qga0', name: 'org.qemu.guest_agent.0']],
         "usb" => true,
         "chardev" => [["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')]]
