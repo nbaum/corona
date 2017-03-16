@@ -236,7 +236,7 @@ module Corona
       config[:ports].each.with_index do |port, i|
         next unless port
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
-        a["device"] << [["virtio-net", addr: port[:addr], vlan: i, mac: port[:mac]]]
+        a["device"] << [["e1000", addr: port[:addr], vlan: i, mac: port[:mac]]]
       end
       a["watchdog"] = ["i6300esb"]
       a["device"] << [["pvpanic"]]
