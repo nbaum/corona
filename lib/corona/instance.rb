@@ -203,28 +203,57 @@ module Corona
     end
 
     def default_arguments
-      {
+      args = {
         "qmp" => [["unix:#{path('qmp')}", "server", "nowait", "nodelay"]],
         "nodefaults" => true,
         "enable-kvm" => true,
         "S" => true,
         "vga" => "std",
         "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw"],
-        "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']],
-        "device" => [
-		["virtio-serial", addr: 7],
-		["virtserialport", chardev: 'qga0', name: 'org.qemu.guest_agent.0'],
-		["virtio-9p-pci", fsdev: 'configfs', mount_tag: 'config', addr: '9']
-	],
         "usb" => true,
-        "chardev" => [["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')]]
+        "chardev" => [
+          ["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')],
+          ["file", id: "log0", path: path("serial.log")]
+        ],
+        "device" => [],
       }
+      extra = {
+        "pc" => {
+          "device" => [["pvpanic"]]
+          "watchdog" => [["i6300esb"]],
+          "serial" => [["chardev:log0"]],
+          "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
+        },
+        "windows" => {
+
+        },
+        "mac" => {
+
+        }
+      }[config[:type].to_s]
+      merge_options args, extra
+    end
+
+    def drive_if
+      {
+        "pc" => "virtio",
+        "windows" => "ide",
+        "mac" => "ide"
+      }[config[:type].to_s]
+    end
+
+    def net_driver
+      {
+        "pc" => "virtio-net",
+        "windows" => "ne2k_pci",
+        "mac" => "e1000"
+      }[config[:type].to_s]
     end
 
     # rubocop:disable Metrics/MethodLength, Metrics/PerceivedComplexity
     def arguments (extra = {})
       a = default_arguments.merge(config["arguments"] || {})
-      a["m"] = config[:memory]
+      a["m"] = [config[:memory]]
       a["smp"] = [cpus: config[:cores], maxcpus: 40]
       a["boot"] = [order: config[:boot_order] || "cdn", menu: "on", splash: "splash.bmp", "splash-time" => "1500"]
       if config[:password].empty?
@@ -236,10 +265,8 @@ module Corona
       config[:ports].each.with_index do |port, i|
         next unless port
         a["net"] << ["bridge", vlan: i, name: port[:if], br: port[:net]]
-        a["device"] << [["e1000", addr: port[:addr], vlan: i, mac: port[:mac]]]
+        a["device"] << [[net_driver, addr: port[:addr], vlan: i, mac: port[:mac]]]
       end
-      a["watchdog"] = ["i6300esb"]
-      a["device"] << [["pvpanic"]]
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       a["cpu"] = "qemu64,+vmx"
       if cd = config[:cd]
@@ -247,25 +274,37 @@ module Corona
                        file: Volume.new(cd[:path]).qemu_url]
       end
       if hd = config[:hd] || config[:hda]
-        a["drive"] << [id: "drive0", if: "ide", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive0", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdb]
-        a["drive"] << [id: "drive1", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive1", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdc]
-        a["drive"] << [id: "drive2", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive2", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdd]
-        a["drive"] << [id: "drive3", if: "virtio", serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive3", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       a["device"] << ["usb-tablet"]
-      a.merge(extra)
+      merge_options a, extra
     end
     # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity
+
+    def merge_options (a, b)
+      c = {}
+      a.each do |k, v|
+        c[k.to_s] = [a[k]].flatten(1)
+      end
+      b.each do |k, v|
+        c[k.to_s] ||= []
+        c[k.to_s] += [v].flatten(1)
+      end
+      c
+    end
 
     def format_option (option)
       case option
