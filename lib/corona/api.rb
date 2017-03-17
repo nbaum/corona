@@ -1,6 +1,8 @@
 # encoding: utf-8
 # Copyright (c) 2015 Nathan Baum
 
+require 'shellwords'
+
 module Corona
 
   class API
@@ -114,6 +116,14 @@ module Corona
       if base = params[:base]
         Volume.new(params[:path], params[:pool])
           .clone(Volume.new(base[:path], base[:pool]))
+      elsif url = params[:url]
+        name = params[:path].shellescape
+        Tempfile.open("realize", "/mnt/data/") do |f|
+          system "wget -O #{f.path.shellescape} #{url.shellescape}"
+          size = File.stat(f.path).size
+          system "dog vdi create #{name} #{size}"
+          system "cat #{f.path.shellescape} | dog vdi write #{name}"
+        end
       else
         Volume.new(params[:path], params[:pool]).truncate(params[:size])
       end
