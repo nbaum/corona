@@ -219,7 +219,7 @@ module Corona
       }
       extra = {
         "pc" => {
-          "device" => [["pvpanic"]]
+          "device" => [["pvpanic"]],
           "watchdog" => [["i6300esb"]],
           "serial" => [["chardev:log0"]],
           "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
