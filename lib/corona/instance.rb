@@ -245,7 +245,7 @@ module Corona
     def net_driver
       {
         "pc" => "virtio-net",
-        "windows" => "ne2k_pci",
+        "windows" => "rtl8139",
         "mac" => "e1000"
       }[config[:type].to_s]
     end
