@@ -82,6 +82,10 @@ module Corona
       end
     end
 
+    def resize (size)
+      dog("vdi", "resize", path, size.to_s)
+    end
+
     def qemu_url
       "sheepdog:///#{path}"
     end

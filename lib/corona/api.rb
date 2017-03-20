@@ -133,6 +133,10 @@ module Corona
       Volume.new(params[:path], params[:pool]).remove
     end
 
+    def do_resize
+      Volume.new(params[:path], params[:pool]).resize(params[:size])
+    end
+
     def do_wipe
       Volume.new(params[:path], params[:pool]).wipe
     end
