@@ -71,7 +71,8 @@ module Corona
 
     def used
       if @name
-        dog("vdi", "list", "-r", path).split(" ")[4].to_i
+        data = dog("vdi", "list", "-r", path).split(" ")
+        data[4].to_i + data[5].to_i
       else
         total = 0
         dog("vdi", "list", "-r").split("\n").each do |line|
