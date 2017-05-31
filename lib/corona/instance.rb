@@ -219,16 +219,16 @@ module Corona
       }
       extra = {
         "pc" => {
+        },
+        "pvpc" => {
           "device" => [["pvpanic"]],
           "watchdog" => [["i6300esb"]],
           "serial" => [["chardev:log0"]],
           "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
         },
         "windows" => {
-
         },
         "mac" => {
-
         }
       }[config[:type].to_s]
       merge_options args, extra
@@ -236,7 +236,8 @@ module Corona
 
     def drive_if
       {
-        "pc" => "virtio",
+        "pc" => "ide",
+        "pvpc" => "virtio",
         "windows" => "ide",
         "mac" => "ide"
       }[config[:type].to_s]
@@ -244,7 +245,8 @@ module Corona
 
     def net_driver
       {
-        "pc" => "virtio-net",
+        "pc" => "e1000",
+        "pvpc" => "virtio-net",
         "windows" => "rtl8139",
         "mac" => "e1000"
       }[config[:type].to_s]
