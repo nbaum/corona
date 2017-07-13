@@ -272,23 +272,23 @@ module Corona
       a["name"] = [config[:name], process: config[:name], "debug-threads" => "on"]
       a["cpu"] = "qemu64,+vmx"
       if cd = config[:cd]
-        a["drive"] << [id: "drivex", if: "ide", format: "raw", media: "cdrom", snapshot: "on",
+        a["drive"] << [id: "drivex", if: "ide", format: "raw", media: "cdrom", snapshot: "on", cache: "writeback",
                        file: Volume.new(cd[:path]).qemu_url]
       end
       if hd = config[:hd] || config[:hda]
-        a["drive"] << [id: "drive0", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive0", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", cache: "writeback",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdb]
-        a["drive"] << [id: "drive1", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive1", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", cache: "writeback",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdc]
-        a["drive"] << [id: "drive2", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive2", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", cache: "writeback",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       if hd = config[:hdd]
-        a["drive"] << [id: "drive3", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
+        a["drive"] << [id: "drive3", if: drive_if, serial: hd[:serial], format: "raw", snapshot: hd[:ephemeral] ? "on" : "off", cache: "writeback",
                        file: Volume.new(hd[:path]).qemu_url]
       end
       a["device"] << ["usb-tablet"]
