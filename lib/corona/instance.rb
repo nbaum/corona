@@ -209,7 +209,7 @@ module Corona
         "enable-kvm" => true,
         "S" => true,
         "vga" => "std",
-        "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw"],
+        "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw", readonly: "on"],
         "usb" => true,
         "chardev" => [
           ["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')],
