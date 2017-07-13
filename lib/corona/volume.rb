@@ -97,7 +97,7 @@ module Corona
     end
 
     def exist?
-      dog "vdi", "check", "-e", path
+      # dog "vdi", "check", "-e", path
       return true
     rescue
       return false
