@@ -292,7 +292,7 @@ module Corona
                        file: Volume.new(hd[:path]).qemu_url]
       end
       a["device"] << ["usb-tablet"]
-      a["device"] << ["virtio-9p-pci", fsdev: "configfs", mount_tag: "count", addr: 9]
+      a["device"] << ["virtio-9p-pci", fsdev: "configfs", mount_tag: "config", addr: 9]
       merge_options a, extra
     end
     # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity
