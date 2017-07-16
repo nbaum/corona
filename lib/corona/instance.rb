@@ -215,6 +215,7 @@ module Corona
           ["file", id: "log0", path: path("serial.log")]
         ],
         "device" => [],
+        "drive" => [],
         "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
       }
       extra = {
