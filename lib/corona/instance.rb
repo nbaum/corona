@@ -209,13 +209,13 @@ module Corona
         "enable-kvm" => true,
         "S" => true,
         "vga" => "std",
-        "drive" => [file: "fat:floppy:12:#{path('floppy')}", if: "floppy", index: 0, format: "raw", readonly: "on"],
         "usb" => true,
         "chardev" => [
           ["socket", "server", "nowait", "nodelay", id: 'qga0', path: path('qga')],
           ["file", id: "log0", path: path("serial.log")]
         ],
         "device" => [],
+        "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
       }
       extra = {
         "pc" => {
@@ -224,7 +224,6 @@ module Corona
           "device" => [["pvpanic"]],
           "watchdog" => [["i6300esb"]],
           "serial" => [["chardev:log0"]],
-          "fsdev" => [['local', path: path('floppy'), security_model: 'none', id: 'configfs']]
         },
         "windows" => {
         },
