@@ -98,7 +98,10 @@ module Corona
     end
 
     def exist?
-      !dog("vdi", "list", "-r", path).empty?
+      dog("vdi", "read", path, "0", "0")
+      true
+    rescue
+      false
     end
 
     def self.sh (*args)
