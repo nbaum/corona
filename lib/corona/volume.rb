@@ -3,6 +3,7 @@
 
 require "corona/errors"
 require "fileutils"
+require "timeout"
 
 module Corona
 
@@ -112,7 +113,9 @@ module Corona
     end
 
     def self.dog (*args)
-      sh "dog", *args
+      Timeout.timeout 5 do
+        sh "dog", *args
+      end
     end
 
     def dog (*args)
