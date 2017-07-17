@@ -48,8 +48,12 @@ module Corona
     def do_stop
       i = instance
       i.stop
-      sleep 0.1 while i.running?
-      true
+      Timeout.timeout 5 do
+        sleep 0.1 while i.running?
+        return true
+      end
+    rescue
+      i.kill
     end
 
     def do_status

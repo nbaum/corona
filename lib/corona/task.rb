@@ -57,6 +57,11 @@ module Corona
       Process.kill :KILL, pid
     end
 
+    def kill
+      return unless running?
+      Process.kill 9, pid
+    end
+
     def running?
       pid && File.exist?("/proc/#{pid}")
     end
