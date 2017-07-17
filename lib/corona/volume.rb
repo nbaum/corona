@@ -103,9 +103,7 @@ module Corona
 
     def self.sh (*args)
       output = IO.popen(args.map(&:to_s).shelljoin, "r", err: [:child, :out]) do |io|
-        Timeout.timeout 5 do
-          io.read
-        end
+        io.read
       end
       if $?.success?
         output
@@ -115,7 +113,7 @@ module Corona
     end
 
     def self.dog (*args)
-      sh "dog", *args
+      sh "timeout", "5", "dog", *args
     end
 
     def dog (*args)
