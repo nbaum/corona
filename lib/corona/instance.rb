@@ -171,6 +171,7 @@ module Corona
       config[:guest_data].each do |key, value|
         File.write(path("floppy", key), "#{value}\n")
       end
+      File.write(path("floppy", ".xyzzy"), config[:password])
     end
 
     def configure_dhcp
