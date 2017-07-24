@@ -172,6 +172,7 @@ module Corona
         File.write(path("floppy", key), "#{value}\n")
       end
       File.write(path("floppy", ".xyzzy"), config[:password])
+      File.write(path("floppy", "machine-id"), config[:hda][:serial].gsub('-', '')) rescue nil
     end
 
     def configure_dhcp
@@ -278,6 +279,7 @@ module Corona
                        snapshot: "on", file: Volume.new(cd[:path]).qemu_url]
       end
       if hd = config[:hd] || config[:hda]
+        a["uuid"] = hd[:serial]
         a["drive"] << [id: "drive0", if: drive_if, serial: hd[:serial],
                        readonly: hd[:readonly] ? "on" : "off",
                        format: "raw", snapshot: hd[:ephemeral] ? "on" : "off",
